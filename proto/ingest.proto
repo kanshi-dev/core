@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package kanshi.ingest.v1;
+
+option go_package = "github.com/kanshi-dev/core/proto/ingest/v1;ingest";
+
+message Point {
+  string name = 1;
+  double value = 2;
+  int64 timestamp_unix_nano = 3;
+  repeated string tags = 4;
+}
+
+message Batch {
+  string agent_id =1;
+  repeated Point points = 2;
+}
+
+message Ack {
+  int64 accepted = 1;
+}
+
+service IngestService {
+  rpc IngestBatch(Batch) returns (Ack);
+}
