@@ -11,6 +11,59 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getMetricsByTimeRange = `-- name: GetMetricsByTimeRange :many
+SELECT
+    agent_id,
+    name,
+    value,
+    ts,
+    tags
+FROM metrics
+WHERE agent_id = $1
+  AND name = $2
+  AND ts BETWEEN $3 AND $4
+ORDER BY ts DESC
+LIMIT 100
+`
+
+type GetMetricsByTimeRangeParams struct {
+	AgentID string             `json:"agent_id"`
+	Name    string             `json:"name"`
+	FromTs  pgtype.Timestamptz `json:"from_ts"`
+	ToTs    pgtype.Timestamptz `json:"to_ts"`
+}
+
+func (q *Queries) GetMetricsByTimeRange(ctx context.Context, arg GetMetricsByTimeRangeParams) ([]Metric, error) {
+	rows, err := q.db.Query(ctx, getMetricsByTimeRange,
+		arg.AgentID,
+		arg.Name,
+		arg.FromTs,
+		arg.ToTs,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Metric
+	for rows.Next() {
+		var i Metric
+		if err := rows.Scan(
+			&i.AgentID,
+			&i.Name,
+			&i.Value,
+			&i.Ts,
+			&i.Tags,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertMetricsBatch = `-- name: InsertMetricsBatch :exec
 INSERT INTO metrics (
     agent_id,

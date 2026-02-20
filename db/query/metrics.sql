@@ -12,3 +12,18 @@ SELECT
     unnest(@values::double precision[]),
     unnest(@timestamps::timestamptz[]),
     @tags::text[][];
+
+
+-- name: GetMetricsByTimeRange :many
+SELECT
+    agent_id,
+    name,
+    value,
+    ts,
+    tags
+FROM metrics
+WHERE agent_id = @agent_id
+  AND name = @name
+  AND ts BETWEEN @from_ts AND @to_ts
+ORDER BY ts DESC
+LIMIT 100;
