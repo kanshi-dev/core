@@ -3,22 +3,61 @@ package ingest
 import (
 	"context"
 	"log"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/kanshi-dev/core/internal/db"
 	pb "github.com/kanshi-dev/core/proto"
 )
 
 type Server struct {
 	pb.UnimplementedIngestServiceServer
+	queries *db.Queries
 }
 
-func NewServer() *Server {
-	return &Server{}
+func NewServer(queries *db.Queries) *Server {
+	return &Server{
+		queries: queries,
+	}
 }
 
 func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error) {
-	log.Printf("received batch from %s: %d point", req.AgentId, len(req.Points))
+	count := len(req.Points)
 
-	return &pb.Ack{
-		Accepted: int64(len(req.Points)),
-	}, nil
+	if count == 0 {
+		return &pb.Ack{Accepted: 0}, nil
+	}
+
+	agentIDs := make([]string, count)
+	names := make([]string, count)
+	values := make([]float64, count)
+	timestamps := make([]pgtype.Timestamptz, count)
+	tags := make([][]string, count)
+
+	for i, p := range req.Points {
+		agentIDs[i] = req.AgentId
+		names[i] = p.Name
+		values[i] = p.Value
+
+		timestamps[i] = pgtype.Timestamptz{
+			Time:  time.Unix(0, p.TimestampUnixNano),
+			Valid: true,
+		}
+
+		tags[i] = p.Tags
+	}
+
+	err := s.queries.InsertMetricsBatch(ctx, db.InsertMetricsBatchParams{
+		AgentIDS:   agentIDs,
+		Names:      names,
+		Values:     values,
+		Timestamps: timestamps,
+		Tags:       tags,
+	})
+	if err != nil {
+		log.Fatalf("failed to insert metrics batch: %v", err)
+		return nil, err
+	}
+
+	return &pb.Ack{Accepted: int64(count)}, nil
 }

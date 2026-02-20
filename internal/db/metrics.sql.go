@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const insertMetric = `-- name: InsertMetric :exec
+const insertMetricsBatch = `-- name: InsertMetricsBatch :exec
 INSERT INTO metrics (
     agent_id,
     name,
@@ -19,23 +19,28 @@ INSERT INTO metrics (
     ts,
     tags
 )
-VALUES ($1, $2, $3, $4, $5)
+SELECT
+    unnest($1::text[]),
+    unnest($2::text[]),
+    unnest($3::double precision[]),
+    unnest($4::timestamptz[]),
+    $5::text[][]
 `
 
-type InsertMetricParams struct {
-	AgentID string             `json:"agent_id"`
-	Name    string             `json:"name"`
-	Value   float64            `json:"value"`
-	Ts      pgtype.Timestamptz `json:"ts"`
-	Tags    []string           `json:"tags"`
+type InsertMetricsBatchParams struct {
+	AgentIDS   []string             `json:"agent_id_s"`
+	Names      []string             `json:"names"`
+	Values     []float64            `json:"values"`
+	Timestamps []pgtype.Timestamptz `json:"timestamps"`
+	Tags       [][]string           `json:"tags"`
 }
 
-func (q *Queries) InsertMetric(ctx context.Context, arg InsertMetricParams) error {
-	_, err := q.db.Exec(ctx, insertMetric,
-		arg.AgentID,
-		arg.Name,
-		arg.Value,
-		arg.Ts,
+func (q *Queries) InsertMetricsBatch(ctx context.Context, arg InsertMetricsBatchParams) error {
+	_, err := q.db.Exec(ctx, insertMetricsBatch,
+		arg.AgentIDS,
+		arg.Names,
+		arg.Values,
+		arg.Timestamps,
 		arg.Tags,
 	)
 	return err
