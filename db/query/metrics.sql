@@ -18,7 +18,7 @@ SELECT
 SELECT
     agent_id,
     name,
-    value,
+    ROUND(value::numeric, 2)::float8 AS value,
     ts,
     tags
 FROM metrics

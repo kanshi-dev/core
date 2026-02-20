@@ -15,7 +15,7 @@ const getMetricsByTimeRange = `-- name: GetMetricsByTimeRange :many
 SELECT
     agent_id,
     name,
-    value,
+    ROUND(value::numeric, 2)::float8 AS value,
     ts,
     tags
 FROM metrics
@@ -33,7 +33,15 @@ type GetMetricsByTimeRangeParams struct {
 	ToTs    pgtype.Timestamptz `json:"to_ts"`
 }
 
-func (q *Queries) GetMetricsByTimeRange(ctx context.Context, arg GetMetricsByTimeRangeParams) ([]Metric, error) {
+type GetMetricsByTimeRangeRow struct {
+	AgentID string             `json:"agent_id"`
+	Name    string             `json:"name"`
+	Value   float64            `json:"value"`
+	Ts      pgtype.Timestamptz `json:"ts"`
+	Tags    []string           `json:"tags"`
+}
+
+func (q *Queries) GetMetricsByTimeRange(ctx context.Context, arg GetMetricsByTimeRangeParams) ([]GetMetricsByTimeRangeRow, error) {
 	rows, err := q.db.Query(ctx, getMetricsByTimeRange,
 		arg.AgentID,
 		arg.Name,
@@ -44,9 +52,9 @@ func (q *Queries) GetMetricsByTimeRange(ctx context.Context, arg GetMetricsByTim
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Metric
+	var items []GetMetricsByTimeRangeRow
 	for rows.Next() {
-		var i Metric
+		var i GetMetricsByTimeRangeRow
 		if err := rows.Scan(
 			&i.AgentID,
 			&i.Name,
