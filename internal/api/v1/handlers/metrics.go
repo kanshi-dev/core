@@ -113,12 +113,19 @@ func GetAggregatedMetrics(queries *db.Queries) fiber.Handler {
 			return badRequest(c, err)
 		}
 
+		var allowedIntervals = map[string]time.Duration{
+			"30s": 30 * time.Second,
+			"1m":  1 * time.Minute,
+			"5m":  5 * time.Minute,
+			"15m": 15 * time.Minute,
+		}
+
 		//Set the default interval to 1 minute
 		intervalStr := c.Query("interval", "1m")
 
-		dur, err := time.ParseDuration(intervalStr)
-		if err != nil {
-			return badRequest(c, errors.New("invalid interval format (use 30s, 1m, 5m, etc)"))
+		dur, ok := allowedIntervals[intervalStr]
+		if !ok {
+			return badRequest(c, errors.New("invalid interval (allowed: 30s, 1m, 5m, 15m)"))
 		}
 
 		interval := pgtype.Interval{
