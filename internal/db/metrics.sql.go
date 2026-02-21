@@ -11,6 +11,57 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getAggregatedMetrics = `-- name: GetAggregatedMetrics :many
+SELECT
+    time_bucket($1::interval, ts) AS bucket,
+    ROUND(AVG(value)) AS avg_value
+FROM metrics
+WHERE agent_id = $2
+  AND name = $3
+  AND ts BETWEEN $4 AND $5
+GROUP BY bucket
+ORDER BY bucket
+`
+
+type GetAggregatedMetricsParams struct {
+	Interval pgtype.Interval    `json:"interval"`
+	AgentID  string             `json:"agent_id"`
+	Name     string             `json:"name"`
+	FromTs   pgtype.Timestamptz `json:"from_ts"`
+	ToTs     pgtype.Timestamptz `json:"to_ts"`
+}
+
+type GetAggregatedMetricsRow struct {
+	Bucket   interface{} `json:"bucket"`
+	AvgValue float64     `json:"avg_value"`
+}
+
+func (q *Queries) GetAggregatedMetrics(ctx context.Context, arg GetAggregatedMetricsParams) ([]GetAggregatedMetricsRow, error) {
+	rows, err := q.db.Query(ctx, getAggregatedMetrics,
+		arg.Interval,
+		arg.AgentID,
+		arg.Name,
+		arg.FromTs,
+		arg.ToTs,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAggregatedMetricsRow
+	for rows.Next() {
+		var i GetAggregatedMetricsRow
+		if err := rows.Scan(&i.Bucket, &i.AvgValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMetricsByTimeRange = `-- name: GetMetricsByTimeRange :many
 SELECT
     agent_id,

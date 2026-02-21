@@ -27,3 +27,15 @@ WHERE agent_id = @agent_id
   AND ts BETWEEN @from_ts AND @to_ts
 ORDER BY ts DESC
 LIMIT 100;
+
+
+-- name: GetAggregatedMetrics :many
+SELECT
+    time_bucket(@interval::interval, ts) AS bucket,
+    ROUND(AVG(value)) AS avg_value
+FROM metrics
+WHERE agent_id = @agent_id
+  AND name = @name
+  AND ts BETWEEN @from_ts AND @to_ts
+GROUP BY bucket
+ORDER BY bucket;
