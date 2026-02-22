@@ -34,3 +34,24 @@ func (s *MetricsService) GetMetrics(
 		},
 	)
 }
+
+func (s *MetricsService) GetAggregatedMetrics(
+	ctx context.Context,
+	agentID string,
+	name string,
+	interval pgtype.Interval,
+	from time.Time,
+	to time.Time,
+) ([]db.GetAggregatedMetricsRow, error) {
+
+	return s.queries.GetAggregatedMetrics(
+		ctx,
+		db.GetAggregatedMetricsParams{
+			AgentID:  agentID,
+			Name:     name,
+			Interval: interval,
+			FromTs:   pgtype.Timestamptz{Time: from, Valid: true},
+			ToTs:     pgtype.Timestamptz{Time: to, Valid: true},
+		},
+	)
+}
