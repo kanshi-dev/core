@@ -13,8 +13,14 @@ import (
 
 const getAggregatedMetrics = `-- name: GetAggregatedMetrics :many
 SELECT
-    time_bucket($1::interval, ts) AS bucket,
-    ROUND(AVG(value)) AS avg_value
+    time_bucket($1, ts) AS bucket,
+    ROUND(AVG(value)::numeric, 2)::float8 AS avg_value,
+    ROUND(MIN(value)::numeric, 2)::float8 AS min_value,
+    ROUND(MAX(value)::numeric, 2)::float8 AS max_value,
+    ROUND(
+                    percentile_cont(0.95) WITHIN GROUP (ORDER BY value)::numeric,
+                    2
+    )::float8 AS p95_value
 FROM metrics
 WHERE agent_id = $2
   AND name = $3
@@ -24,7 +30,7 @@ ORDER BY bucket
 `
 
 type GetAggregatedMetricsParams struct {
-	Interval pgtype.Interval    `json:"interval"`
+	Interval interface{}        `json:"interval"`
 	AgentID  string             `json:"agent_id"`
 	Name     string             `json:"name"`
 	FromTs   pgtype.Timestamptz `json:"from_ts"`
@@ -34,6 +40,9 @@ type GetAggregatedMetricsParams struct {
 type GetAggregatedMetricsRow struct {
 	Bucket   interface{} `json:"bucket"`
 	AvgValue float64     `json:"avg_value"`
+	MinValue float64     `json:"min_value"`
+	MaxValue float64     `json:"max_value"`
+	P95Value float64     `json:"p95_value"`
 }
 
 func (q *Queries) GetAggregatedMetrics(ctx context.Context, arg GetAggregatedMetricsParams) ([]GetAggregatedMetricsRow, error) {
@@ -51,7 +60,13 @@ func (q *Queries) GetAggregatedMetrics(ctx context.Context, arg GetAggregatedMet
 	var items []GetAggregatedMetricsRow
 	for rows.Next() {
 		var i GetAggregatedMetricsRow
-		if err := rows.Scan(&i.Bucket, &i.AvgValue); err != nil {
+		if err := rows.Scan(
+			&i.Bucket,
+			&i.AvgValue,
+			&i.MinValue,
+			&i.MaxValue,
+			&i.P95Value,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

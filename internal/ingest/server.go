@@ -59,5 +59,10 @@ func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error
 		return nil, err
 	}
 
+	if err := s.queries.UpsertAgentHeartbeat(ctx, req.AgentId); err != nil {
+		log.Printf("failed to upsert heartbeat for agent %s: %v", req.AgentId, err)
+		return nil, err
+	}
+
 	return &pb.Ack{Accepted: int64(count)}, nil
 }

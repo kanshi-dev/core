@@ -9,4 +9,5 @@ import (
 func Init(router fiber.Router, queries *db.Queries) {
 	router.Get("/metrics", handlers.GetMetrics(queries))
 	router.Get("/metrics/aggregate", handlers.GetAggregatedMetrics(queries))
+	router.Get("/agents", handlers.GetAgentHeartBeat(queries))
 }

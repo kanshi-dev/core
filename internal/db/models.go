@@ -8,6 +8,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Agent struct {
+	AgentID  string             `json:"agent_id"`
+	LastSeen pgtype.Timestamptz `json:"last_seen"`
+}
+
 type Metric struct {
 	AgentID string             `json:"agent_id"`
 	Name    string             `json:"name"`
