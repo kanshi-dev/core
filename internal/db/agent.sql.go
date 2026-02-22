@@ -7,25 +7,31 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const listAgents = `-- name: ListAgents :many
-SELECT
-    agent_id,
-    last_seen
+SELECT agent_id,
+       last_seen
 FROM agents
 ORDER BY last_seen DESC
 `
 
-func (q *Queries) ListAgents(ctx context.Context) ([]Agent, error) {
+type ListAgentsRow struct {
+	AgentID  string             `json:"agent_id"`
+	LastSeen pgtype.Timestamptz `json:"last_seen"`
+}
+
+func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
 	rows, err := q.db.Query(ctx, listAgents)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Agent
+	var items []ListAgentsRow
 	for rows.Next() {
-		var i Agent
+		var i ListAgentsRow
 		if err := rows.Scan(&i.AgentID, &i.LastSeen); err != nil {
 			return nil, err
 		}
@@ -38,13 +44,38 @@ func (q *Queries) ListAgents(ctx context.Context) ([]Agent, error) {
 }
 
 const upsertAgentHeartbeat = `-- name: UpsertAgentHeartbeat :exec
-INSERT INTO agents (agent_id, last_seen)
-VALUES ($1, NOW())
+INSERT INTO agents (
+    agent_id,
+    hostname,
+    os,
+    arch,
+    version,
+    last_seen
+)
+VALUES ($1, $2, $3, $4, $5, NOW())
 ON CONFLICT (agent_id)
-    DO UPDATE SET last_seen = EXCLUDED.last_seen
+    DO UPDATE SET hostname  = EXCLUDED.hostname,
+                  os        = EXCLUDED.os,
+                  arch      = EXCLUDED.arch,
+                  version   = EXCLUDED.version,
+                  last_seen = EXCLUDED.last_seen
 `
 
-func (q *Queries) UpsertAgentHeartbeat(ctx context.Context, agentID string) error {
-	_, err := q.db.Exec(ctx, upsertAgentHeartbeat, agentID)
+type UpsertAgentHeartbeatParams struct {
+	AgentID  string      `json:"agent_id"`
+	Hostname pgtype.Text `json:"hostname"`
+	Os       pgtype.Text `json:"os"`
+	Arch     pgtype.Text `json:"arch"`
+	Version  pgtype.Text `json:"version"`
+}
+
+func (q *Queries) UpsertAgentHeartbeat(ctx context.Context, arg UpsertAgentHeartbeatParams) error {
+	_, err := q.db.Exec(ctx, upsertAgentHeartbeat,
+		arg.AgentID,
+		arg.Hostname,
+		arg.Os,
+		arg.Arch,
+		arg.Version,
+	)
 	return err
 }

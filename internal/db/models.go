@@ -10,6 +10,10 @@ import (
 
 type Agent struct {
 	AgentID  string             `json:"agent_id"`
+	Hostname pgtype.Text        `json:"hostname"`
+	Os       pgtype.Text        `json:"os"`
+	Arch     pgtype.Text        `json:"arch"`
+	Version  pgtype.Text        `json:"version"`
 	LastSeen pgtype.Timestamptz `json:"last_seen"`
 }
 

@@ -13,14 +13,11 @@ import (
 
 const getAggregatedMetrics = `-- name: GetAggregatedMetrics :many
 SELECT
-    time_bucket($1, ts) AS bucket,
-    ROUND(AVG(value)::numeric, 2)::float8 AS avg_value,
-    ROUND(MIN(value)::numeric, 2)::float8 AS min_value,
-    ROUND(MAX(value)::numeric, 2)::float8 AS max_value,
-    ROUND(
-                    percentile_cont(0.95) WITHIN GROUP (ORDER BY value)::numeric,
-                    2
-    )::float8 AS p95_value
+    time_bucket($1, ts) AS "bucket",
+    ROUND(AVG(value)::numeric, 2)::float8 AS "avgValue",
+    ROUND(MIN(value)::numeric, 2)::float8 AS "minValue",
+    ROUND(MAX(value)::numeric, 2)::float8 AS "maxValue",
+    ROUND(percentile_cont(0.95) WITHIN GROUP (ORDER BY value)::numeric,2)::float8 AS "p95Value"
 FROM metrics
 WHERE agent_id = $2
   AND name = $3
@@ -39,10 +36,10 @@ type GetAggregatedMetricsParams struct {
 
 type GetAggregatedMetricsRow struct {
 	Bucket   interface{} `json:"bucket"`
-	AvgValue float64     `json:"avg_value"`
-	MinValue float64     `json:"min_value"`
-	MaxValue float64     `json:"max_value"`
-	P95Value float64     `json:"p95_value"`
+	AvgValue float64     `json:"avgValue"`
+	MinValue float64     `json:"minValue"`
+	MaxValue float64     `json:"maxValue"`
+	P95Value float64     `json:"p95Value"`
 }
 
 func (q *Queries) GetAggregatedMetrics(ctx context.Context, arg GetAggregatedMetricsParams) ([]GetAggregatedMetricsRow, error) {
@@ -79,10 +76,10 @@ func (q *Queries) GetAggregatedMetrics(ctx context.Context, arg GetAggregatedMet
 
 const getMetricsByTimeRange = `-- name: GetMetricsByTimeRange :many
 SELECT
-    agent_id,
+    agent_id AS "agentId",
     name,
     ROUND(value::numeric, 2)::float8 AS value,
-    ts,
+    ts AS "timestamp",
     tags
 FROM metrics
 WHERE agent_id = $1
@@ -100,11 +97,11 @@ type GetMetricsByTimeRangeParams struct {
 }
 
 type GetMetricsByTimeRangeRow struct {
-	AgentID string             `json:"agent_id"`
-	Name    string             `json:"name"`
-	Value   float64            `json:"value"`
-	Ts      pgtype.Timestamptz `json:"ts"`
-	Tags    []string           `json:"tags"`
+	AgentId   string             `json:"agentId"`
+	Name      string             `json:"name"`
+	Value     float64            `json:"value"`
+	Timestamp pgtype.Timestamptz `json:"timestamp"`
+	Tags      []string           `json:"tags"`
 }
 
 func (q *Queries) GetMetricsByTimeRange(ctx context.Context, arg GetMetricsByTimeRangeParams) ([]GetMetricsByTimeRangeRow, error) {
@@ -122,10 +119,10 @@ func (q *Queries) GetMetricsByTimeRange(ctx context.Context, arg GetMetricsByTim
 	for rows.Next() {
 		var i GetMetricsByTimeRangeRow
 		if err := rows.Scan(
-			&i.AgentID,
+			&i.AgentId,
 			&i.Name,
 			&i.Value,
-			&i.Ts,
+			&i.Timestamp,
 			&i.Tags,
 		); err != nil {
 			return nil, err

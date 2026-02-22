@@ -16,10 +16,10 @@ SELECT
 
 -- name: GetMetricsByTimeRange :many
 SELECT
-    agent_id,
+    agent_id AS "agentId",
     name,
     ROUND(value::numeric, 2)::float8 AS value,
-    ts,
+    ts AS "timestamp",
     tags
 FROM metrics
 WHERE agent_id = @agent_id
@@ -31,14 +31,11 @@ LIMIT 100;
 
 -- name: GetAggregatedMetrics :many
 SELECT
-    time_bucket(@interval, ts) AS bucket,
-    ROUND(AVG(value)::numeric, 2)::float8 AS avg_value,
-    ROUND(MIN(value)::numeric, 2)::float8 AS min_value,
-    ROUND(MAX(value)::numeric, 2)::float8 AS max_value,
-    ROUND(
-                    percentile_cont(0.95) WITHIN GROUP (ORDER BY value)::numeric,
-                    2
-    )::float8 AS p95_value
+    time_bucket(@interval, ts) AS "bucket",
+    ROUND(AVG(value)::numeric, 2)::float8 AS "avgValue",
+    ROUND(MIN(value)::numeric, 2)::float8 AS "minValue",
+    ROUND(MAX(value)::numeric, 2)::float8 AS "maxValue",
+    ROUND(percentile_cont(0.95) WITHIN GROUP (ORDER BY value)::numeric,2)::float8 AS "p95Value"
 FROM metrics
 WHERE agent_id = @agent_id
   AND name = @name
