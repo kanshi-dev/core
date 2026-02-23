@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kanshi-dev/core/internal/api/v1/response"
-	"github.com/kanshi-dev/core/internal/db"
+	"github.com/kanshi-dev/core/internal/service"
 )
 
 // Parse metric params
@@ -67,7 +67,7 @@ func badRequest(c fiber.Ctx, err error) error {
 /*
 This endpoint returns metrics for a given agent and metric name
 */
-func GetMetrics(queries *db.Queries) fiber.Handler {
+func GetMetrics(svc *service.MetricsService) fiber.Handler {
 	return func(c fiber.Ctx) error {
 
 		// Parse params agent and metric name
@@ -82,25 +82,18 @@ func GetMetrics(queries *db.Queries) fiber.Handler {
 			return badRequest(c, err)
 		}
 
-		rows, err := queries.GetMetricsByTimeRange(
-			c.Context(),
-			db.GetMetricsByTimeRangeParams{
-				AgentID: agentID,
-				Name:    name,
-				FromTs:  pgtype.Timestamptz{Time: fromTime, Valid: true},
-				ToTs:    pgtype.Timestamptz{Time: toTime, Valid: true},
-			},
-		)
+		// Get metrics from db
+		metrics, err := svc.GetMetrics(c.Context(), agentID, name, fromTime, toTime)
 
 		if err != nil {
 			return response.CustomResponse(c, fiber.StatusInternalServerError, "failed to get metrics", err.Error())
 		}
 
-		return response.CustomResponse(c, fiber.StatusOK, "success", rows)
+		return response.CustomResponse(c, fiber.StatusOK, "success", metrics)
 	}
 }
 
-func GetAggregatedMetrics(queries *db.Queries) fiber.Handler {
+func GetAggregatedMetrics(svc *service.MetricsService) fiber.Handler {
 	return func(c fiber.Ctx) error {
 
 		agentID, name, err := parseMetricParams(c)
@@ -113,6 +106,7 @@ func GetAggregatedMetrics(queries *db.Queries) fiber.Handler {
 			return badRequest(c, err)
 		}
 
+		// Predefined intervals
 		var allowedIntervals = map[string]time.Duration{
 			"30s": 30 * time.Second,
 			"1m":  1 * time.Minute,
@@ -123,26 +117,19 @@ func GetAggregatedMetrics(queries *db.Queries) fiber.Handler {
 		//Set the default interval to 1 minute
 		intervalStr := c.Query("interval", "1m")
 
+		// Check if an interval is valid
 		dur, ok := allowedIntervals[intervalStr]
 		if !ok {
 			return badRequest(c, errors.New("invalid interval (allowed: 30s, 1m, 5m, 15m)"))
 		}
 
+		// Convert interval to pgtype.Interval
 		interval := pgtype.Interval{
 			Microseconds: dur.Microseconds(),
 			Valid:        true,
 		}
 
-		rows, err := queries.GetAggregatedMetrics(
-			c.Context(),
-			db.GetAggregatedMetricsParams{
-				AgentID:  agentID,
-				Name:     name,
-				Interval: interval,
-				FromTs:   pgtype.Timestamptz{Time: fromTime, Valid: true},
-				ToTs:     pgtype.Timestamptz{Time: toTime, Valid: true},
-			},
-		)
+		metrics, err := svc.GetAggregatedMetrics(c.Context(), agentID, name, interval, fromTime, toTime)
 
 		if err != nil {
 			return response.CustomResponse(
@@ -153,6 +140,6 @@ func GetAggregatedMetrics(queries *db.Queries) fiber.Handler {
 			)
 		}
 
-		return response.CustomResponse(c, fiber.StatusOK, "success", rows)
+		return response.CustomResponse(c, fiber.StatusOK, "success", metrics)
 	}
 }

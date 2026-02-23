@@ -2,19 +2,28 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v3"
-	"github.com/kanshi-dev/core/internal/db"
+	"github.com/kanshi-dev/core/internal/service"
 )
 
 type Server struct {
-	App *fiber.App
+	App            *fiber.App
+	MetricsService *service.MetricsService
+	AgentService   *service.AgentsService
 }
 
-func NewServer(queries *db.Queries) *Server {
+func NewServer(agentService *service.AgentsService, metricsService *service.MetricsService) *Server {
 	app := fiber.New()
+	server := &Server{
+		App:            app,
+		MetricsService: metricsService,
+		AgentService:   agentService,
+	}
 
-	InitRouter(app, queries)
+	InitRouter(app, server)
 
 	return &Server{
-		App: app,
+		App:            app,
+		MetricsService: metricsService,
+		AgentService:   agentService,
 	}
 }

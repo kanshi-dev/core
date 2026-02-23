@@ -3,10 +3,9 @@ package api
 import (
 	"github.com/gofiber/fiber/v3"
 	v1 "github.com/kanshi-dev/core/internal/api/v1"
-	"github.com/kanshi-dev/core/internal/db"
 )
 
-func InitRouter(app *fiber.App, queries *db.Queries) {
+func InitRouter(app *fiber.App, apiSever *Server) {
 
 	//Root Endpoint
 	app.Get("/", func(c fiber.Ctx) error {
@@ -25,8 +24,12 @@ func InitRouter(app *fiber.App, queries *db.Queries) {
 
 	//Versioning Init
 	api := app.Group("/api")
+
+	// Verson 1
 	v1Group := api.Group("/v1")
-	v1.Init(v1Group, queries)
+
+	// Calls Init() from v1/router.go
+	v1.Init(v1Group, apiSever.MetricsService, apiSever.AgentService)
 
 	//404 Endpoint
 	app.Use(func(c fiber.Ctx) error {

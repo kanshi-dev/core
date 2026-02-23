@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/kanshi-dev/core/internal/api/v1/response"
-	"github.com/kanshi-dev/core/internal/db"
+	"github.com/kanshi-dev/core/internal/service"
 )
 
 type AgentResponse struct {
@@ -14,10 +14,10 @@ type AgentResponse struct {
 	Status   string    `json:"status"`
 }
 
-func GetAgentHeartBeat(queries *db.Queries) fiber.Handler {
+func GetAgentHeartBeat(svc *service.AgentsService) fiber.Handler {
 	return func(c fiber.Ctx) error {
 
-		agents, err := queries.ListAgents(c.Context())
+		agents, err := svc.ListAgentsWithStatus(c.Context(), 30*time.Second)
 		if err != nil {
 			return response.CustomResponse(
 				c,
@@ -27,24 +27,6 @@ func GetAgentHeartBeat(queries *db.Queries) fiber.Handler {
 			)
 		}
 
-		now := time.Now().UTC()
-		offlineThreshold := 1 * time.Minute
-
-		var result []AgentResponse
-
-		for _, a := range agents {
-			status := "offline"
-			if now.Sub(a.LastSeen.Time) <= offlineThreshold {
-				status = "online"
-			}
-
-			result = append(result, AgentResponse{
-				AgentID:  a.AgentID,
-				LastSeen: a.LastSeen.Time,
-				Status:   status,
-			})
-		}
-
-		return response.CustomResponse(c, fiber.StatusOK, "success", result)
+		return response.CustomResponse(c, fiber.StatusOK, "success", agents)
 	}
 }

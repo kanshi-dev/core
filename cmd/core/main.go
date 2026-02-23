@@ -8,6 +8,7 @@ import (
 	"github.com/kanshi-dev/core/internal/api"
 	"github.com/kanshi-dev/core/internal/db"
 	"github.com/kanshi-dev/core/internal/ingest"
+	"github.com/kanshi-dev/core/internal/service"
 	pb "github.com/kanshi-dev/core/proto"
 	"google.golang.org/grpc"
 )
@@ -40,8 +41,12 @@ func main() {
 		}
 	}()
 
+	//Setup Services
+	agentService := service.NewAgentsService(queries)
+	metricsService := service.NewMetricsService(queries)
+
 	// Init Api
-	apiServer := api.NewServer(queries)
+	apiServer := api.NewServer(agentService, metricsService)
 
 	if err := apiServer.App.Listen(":8080"); err != nil {
 		log.Fatal(err)
