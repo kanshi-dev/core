@@ -21,6 +21,36 @@ func NewServer(queries *db.Queries) *Server {
 	}
 }
 
+func (s *Server) ReportAgent(
+	ctx context.Context,
+	req *pb.AgentReport,
+) (*pb.Ack, error) {
+
+	err := s.queries.UpsertAgentReport(
+		ctx,
+		db.UpsertAgentReportParams{
+			AgentID:  req.AgentId,
+			Hostname: req.Hostname,
+			Os:       req.Os,
+			Arch:     req.Arch,
+			CpuCores: pgtype.Int4{
+				Int32: req.CpuCores,
+				Valid: true,
+			},
+			TotalMemory: pgtype.Int8{
+				Int64: req.TotalMemory,
+				Valid: true,
+			},
+			Version: req.Version,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Ack{Accepted: 1}, nil
+}
+
 func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error) {
 	count := len(req.Points)
 

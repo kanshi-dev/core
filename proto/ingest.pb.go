@@ -89,6 +89,98 @@ func (x *Point) GetTags() []string {
 	return nil
 }
 
+type AgentReport struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	Hostname      string                 `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Os            string                 `protobuf:"bytes,3,opt,name=os,proto3" json:"os,omitempty"`
+	Arch          string                 `protobuf:"bytes,4,opt,name=arch,proto3" json:"arch,omitempty"`
+	CpuCores      int32                  `protobuf:"varint,5,opt,name=cpu_cores,json=cpuCores,proto3" json:"cpu_cores,omitempty"`
+	TotalMemory   int64                  `protobuf:"varint,6,opt,name=total_memory,json=totalMemory,proto3" json:"total_memory,omitempty"`
+	Version       string                 `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AgentReport) Reset() {
+	*x = AgentReport{}
+	mi := &file_proto_ingest_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AgentReport) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AgentReport) ProtoMessage() {}
+
+func (x *AgentReport) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_ingest_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AgentReport.ProtoReflect.Descriptor instead.
+func (*AgentReport) Descriptor() ([]byte, []int) {
+	return file_proto_ingest_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AgentReport) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
+func (x *AgentReport) GetHostname() string {
+	if x != nil {
+		return x.Hostname
+	}
+	return ""
+}
+
+func (x *AgentReport) GetOs() string {
+	if x != nil {
+		return x.Os
+	}
+	return ""
+}
+
+func (x *AgentReport) GetArch() string {
+	if x != nil {
+		return x.Arch
+	}
+	return ""
+}
+
+func (x *AgentReport) GetCpuCores() int32 {
+	if x != nil {
+		return x.CpuCores
+	}
+	return 0
+}
+
+func (x *AgentReport) GetTotalMemory() int64 {
+	if x != nil {
+		return x.TotalMemory
+	}
+	return 0
+}
+
+func (x *AgentReport) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
 type Batch struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
@@ -99,7 +191,7 @@ type Batch struct {
 
 func (x *Batch) Reset() {
 	*x = Batch{}
-	mi := &file_proto_ingest_proto_msgTypes[1]
+	mi := &file_proto_ingest_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -111,7 +203,7 @@ func (x *Batch) String() string {
 func (*Batch) ProtoMessage() {}
 
 func (x *Batch) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ingest_proto_msgTypes[1]
+	mi := &file_proto_ingest_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -124,7 +216,7 @@ func (x *Batch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Batch.ProtoReflect.Descriptor instead.
 func (*Batch) Descriptor() ([]byte, []int) {
-	return file_proto_ingest_proto_rawDescGZIP(), []int{1}
+	return file_proto_ingest_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Batch) GetAgentId() string {
@@ -150,7 +242,7 @@ type Ack struct {
 
 func (x *Ack) Reset() {
 	*x = Ack{}
-	mi := &file_proto_ingest_proto_msgTypes[2]
+	mi := &file_proto_ingest_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -162,7 +254,7 @@ func (x *Ack) String() string {
 func (*Ack) ProtoMessage() {}
 
 func (x *Ack) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ingest_proto_msgTypes[2]
+	mi := &file_proto_ingest_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -175,7 +267,7 @@ func (x *Ack) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Ack.ProtoReflect.Descriptor instead.
 func (*Ack) Descriptor() ([]byte, []int) {
-	return file_proto_ingest_proto_rawDescGZIP(), []int{2}
+	return file_proto_ingest_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Ack) GetAccepted() int64 {
@@ -194,14 +286,23 @@ const file_proto_ingest_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x01R\x05value\x12.\n" +
 	"\x13timestamp_unix_nano\x18\x03 \x01(\x03R\x11timestampUnixNano\x12\x12\n" +
-	"\x04tags\x18\x04 \x03(\tR\x04tags\"S\n" +
+	"\x04tags\x18\x04 \x03(\tR\x04tags\"\xc2\x01\n" +
+	"\vAgentReport\x12\x19\n" +
+	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x1a\n" +
+	"\bhostname\x18\x02 \x01(\tR\bhostname\x12\x0e\n" +
+	"\x02os\x18\x03 \x01(\tR\x02os\x12\x12\n" +
+	"\x04arch\x18\x04 \x01(\tR\x04arch\x12\x1b\n" +
+	"\tcpu_cores\x18\x05 \x01(\x05R\bcpuCores\x12!\n" +
+	"\ftotal_memory\x18\x06 \x01(\x03R\vtotalMemory\x12\x18\n" +
+	"\aversion\x18\a \x01(\tR\aversion\"S\n" +
 	"\x05Batch\x12\x19\n" +
 	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12/\n" +
 	"\x06points\x18\x02 \x03(\v2\x17.kanshi.ingest.v1.PointR\x06points\"!\n" +
 	"\x03Ack\x12\x1a\n" +
-	"\baccepted\x18\x01 \x01(\x03R\baccepted2N\n" +
+	"\baccepted\x18\x01 \x01(\x03R\baccepted2\x93\x01\n" +
 	"\rIngestService\x12=\n" +
-	"\vIngestBatch\x12\x17.kanshi.ingest.v1.Batch\x1a\x15.kanshi.ingest.v1.AckB3Z1github.com/kanshi-dev/core/proto/ingest/v1;ingestb\x06proto3"
+	"\vIngestBatch\x12\x17.kanshi.ingest.v1.Batch\x1a\x15.kanshi.ingest.v1.Ack\x12C\n" +
+	"\vReportAgent\x12\x1d.kanshi.ingest.v1.AgentReport\x1a\x15.kanshi.ingest.v1.AckB3Z1github.com/kanshi-dev/core/proto/ingest/v1;ingestb\x06proto3"
 
 var (
 	file_proto_ingest_proto_rawDescOnce sync.Once
@@ -215,18 +316,21 @@ func file_proto_ingest_proto_rawDescGZIP() []byte {
 	return file_proto_ingest_proto_rawDescData
 }
 
-var file_proto_ingest_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_proto_ingest_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_proto_ingest_proto_goTypes = []any{
-	(*Point)(nil), // 0: kanshi.ingest.v1.Point
-	(*Batch)(nil), // 1: kanshi.ingest.v1.Batch
-	(*Ack)(nil),   // 2: kanshi.ingest.v1.Ack
+	(*Point)(nil),       // 0: kanshi.ingest.v1.Point
+	(*AgentReport)(nil), // 1: kanshi.ingest.v1.AgentReport
+	(*Batch)(nil),       // 2: kanshi.ingest.v1.Batch
+	(*Ack)(nil),         // 3: kanshi.ingest.v1.Ack
 }
 var file_proto_ingest_proto_depIdxs = []int32{
 	0, // 0: kanshi.ingest.v1.Batch.points:type_name -> kanshi.ingest.v1.Point
-	1, // 1: kanshi.ingest.v1.IngestService.IngestBatch:input_type -> kanshi.ingest.v1.Batch
-	2, // 2: kanshi.ingest.v1.IngestService.IngestBatch:output_type -> kanshi.ingest.v1.Ack
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
+	2, // 1: kanshi.ingest.v1.IngestService.IngestBatch:input_type -> kanshi.ingest.v1.Batch
+	1, // 2: kanshi.ingest.v1.IngestService.ReportAgent:input_type -> kanshi.ingest.v1.AgentReport
+	3, // 3: kanshi.ingest.v1.IngestService.IngestBatch:output_type -> kanshi.ingest.v1.Ack
+	3, // 4: kanshi.ingest.v1.IngestService.ReportAgent:output_type -> kanshi.ingest.v1.Ack
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -243,7 +347,7 @@ func file_proto_ingest_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_ingest_proto_rawDesc), len(file_proto_ingest_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
