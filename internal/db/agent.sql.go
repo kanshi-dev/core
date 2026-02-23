@@ -12,15 +12,16 @@ import (
 )
 
 const listAgents = `-- name: ListAgents :many
-SELECT agent_id,
-       last_seen
+SELECT
+    agent_id AS "agentId",
+    last_seen AS "lastSeen"
 FROM agents
 ORDER BY last_seen DESC
 `
 
 type ListAgentsRow struct {
-	AgentID  string             `json:"agent_id"`
-	LastSeen pgtype.Timestamptz `json:"last_seen"`
+	AgentId  string             `json:"agentId"`
+	LastSeen pgtype.Timestamptz `json:"lastSeen"`
 }
 
 func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
@@ -32,7 +33,7 @@ func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
 	var items []ListAgentsRow
 	for rows.Next() {
 		var i ListAgentsRow
-		if err := rows.Scan(&i.AgentID, &i.LastSeen); err != nil {
+		if err := rows.Scan(&i.AgentId, &i.LastSeen); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -44,37 +45,57 @@ func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
 }
 
 const upsertAgentHeartbeat = `-- name: UpsertAgentHeartbeat :exec
+UPDATE agents
+SET last_seen = NOW()
+WHERE agent_id = $1
+`
+
+func (q *Queries) UpsertAgentHeartbeat(ctx context.Context, agentID string) error {
+	_, err := q.db.Exec(ctx, upsertAgentHeartbeat, agentID)
+	return err
+}
+
+const upsertAgentReport = `-- name: UpsertAgentReport :exec
 INSERT INTO agents (
     agent_id,
     hostname,
     os,
     arch,
+    cpu_cores,
+    total_memory,
     version,
     last_seen
 )
-VALUES ($1, $2, $3, $4, $5, NOW())
+VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
 ON CONFLICT (agent_id)
-    DO UPDATE SET hostname  = EXCLUDED.hostname,
-                  os        = EXCLUDED.os,
-                  arch      = EXCLUDED.arch,
-                  version   = EXCLUDED.version,
+    DO UPDATE SET
+                  hostname = EXCLUDED.hostname,
+                  os = EXCLUDED.os,
+                  arch = EXCLUDED.arch,
+                  cpu_cores = EXCLUDED.cpu_cores,
+                  total_memory = EXCLUDED.total_memory,
+                  version = EXCLUDED.version,
                   last_seen = EXCLUDED.last_seen
 `
 
-type UpsertAgentHeartbeatParams struct {
-	AgentID  string      `json:"agent_id"`
-	Hostname pgtype.Text `json:"hostname"`
-	Os       pgtype.Text `json:"os"`
-	Arch     pgtype.Text `json:"arch"`
-	Version  pgtype.Text `json:"version"`
+type UpsertAgentReportParams struct {
+	AgentID     string      `json:"agent_id"`
+	Hostname    string      `json:"hostname"`
+	Os          string      `json:"os"`
+	Arch        string      `json:"arch"`
+	CpuCores    pgtype.Int4 `json:"cpu_cores"`
+	TotalMemory pgtype.Int8 `json:"total_memory"`
+	Version     string      `json:"version"`
 }
 
-func (q *Queries) UpsertAgentHeartbeat(ctx context.Context, arg UpsertAgentHeartbeatParams) error {
-	_, err := q.db.Exec(ctx, upsertAgentHeartbeat,
+func (q *Queries) UpsertAgentReport(ctx context.Context, arg UpsertAgentReportParams) error {
+	_, err := q.db.Exec(ctx, upsertAgentReport,
 		arg.AgentID,
 		arg.Hostname,
 		arg.Os,
 		arg.Arch,
+		arg.CpuCores,
+		arg.TotalMemory,
 		arg.Version,
 	)
 	return err

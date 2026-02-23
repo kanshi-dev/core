@@ -9,12 +9,14 @@ import (
 )
 
 type Agent struct {
-	AgentID  string             `json:"agent_id"`
-	Hostname pgtype.Text        `json:"hostname"`
-	Os       pgtype.Text        `json:"os"`
-	Arch     pgtype.Text        `json:"arch"`
-	Version  pgtype.Text        `json:"version"`
-	LastSeen pgtype.Timestamptz `json:"last_seen"`
+	AgentID     string             `json:"agent_id"`
+	Hostname    string             `json:"hostname"`
+	Os          string             `json:"os"`
+	Arch        string             `json:"arch"`
+	CpuCores    pgtype.Int4        `json:"cpu_cores"`
+	TotalMemory pgtype.Int8        `json:"total_memory"`
+	Version     string             `json:"version"`
+	LastSeen    pgtype.Timestamptz `json:"last_seen"`
 }
 
 type Metric struct {

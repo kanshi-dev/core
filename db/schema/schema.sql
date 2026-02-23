@@ -1,6 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
-CREATE TABLE IF NOT EXISTS metrics(
+CREATE TABLE IF NOT EXISTS metrics
+(
     agent_id TEXT             NOT NULL,
     name     TEXT             NOT NULL,
     value    DOUBLE PRECISION NOT NULL,
@@ -17,11 +18,14 @@ CREATE INDEX IF NOT EXISTS idx_metrics_agent_ts
     ON metrics (agent_id, ts DESC);
 
 
-CREATE TABLE agents(
-    agent_id  TEXT PRIMARY KEY,
-    hostname  TEXT,
-    os        TEXT,
-    arch      TEXT,
-    version   TEXT,
-    last_seen TIMESTAMPTZ NOT NULL
+CREATE TABLE IF NOT EXISTS agents
+(
+    agent_id     TEXT PRIMARY KEY,
+    hostname     TEXT        NOT NULL,
+    os           TEXT        NOT NULL,
+    arch         TEXT        NOT NULL,
+    cpu_cores    INT,
+    total_memory BIGINT,
+    version      TEXT        NOT NULL,
+    last_seen    TIMESTAMPTZ NOT NULL
 );
