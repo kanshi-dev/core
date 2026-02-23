@@ -79,13 +79,13 @@ ON CONFLICT (agent_id)
 `
 
 type UpsertAgentReportParams struct {
-	AgentID     string      `json:"agent_id"`
-	Hostname    string      `json:"hostname"`
-	Os          string      `json:"os"`
-	Arch        string      `json:"arch"`
-	CpuCores    pgtype.Int4 `json:"cpu_cores"`
-	TotalMemory pgtype.Int8 `json:"total_memory"`
-	Version     string      `json:"version"`
+	AgentID     string `json:"agent_id"`
+	Hostname    string `json:"hostname"`
+	Os          string `json:"os"`
+	Arch        string `json:"arch"`
+	CpuCores    int32  `json:"cpu_cores"`
+	TotalMemory int64  `json:"total_memory"`
+	Version     string `json:"version"`
 }
 
 func (q *Queries) UpsertAgentReport(ctx context.Context, arg UpsertAgentReportParams) error {

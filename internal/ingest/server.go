@@ -29,19 +29,13 @@ func (s *Server) ReportAgent(
 	err := s.queries.UpsertAgentReport(
 		ctx,
 		db.UpsertAgentReportParams{
-			AgentID:  req.AgentId,
-			Hostname: req.Hostname,
-			Os:       req.Os,
-			Arch:     req.Arch,
-			CpuCores: pgtype.Int4{
-				Int32: req.CpuCores,
-				Valid: true,
-			},
-			TotalMemory: pgtype.Int8{
-				Int64: req.TotalMemory,
-				Valid: true,
-			},
-			Version: req.Version,
+			AgentID:     req.AgentId,
+			Hostname:    req.Hostname,
+			Os:          req.Os,
+			Arch:        req.Arch,
+			CpuCores:    req.CpuCores,
+			TotalMemory: req.TotalMemory,
+			Version:     req.Version,
 		},
 	)
 	if err != nil {
