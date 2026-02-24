@@ -12,11 +12,11 @@ import (
 
 // Parse metric params
 func parseMetricParams(c fiber.Ctx) (agentID string, name string, err error) {
-	agentID = c.Query("agent_id")
+	agentID = c.Query("agentId")
 	name = c.Query("name")
 
 	if agentID == "" || name == "" {
-		err = errors.New("agent_id and name required")
+		err = errors.New("agentId and name required")
 	}
 	return
 }

@@ -8,9 +8,9 @@ import (
 )
 
 type AgentStatus struct {
-	AgentID  string
-	LastSeen time.Time
-	Status   string
+	AgentID  string    `json:"agentId"`
+	LastSeen time.Time `json:"lastSeen"`
+	Status   string    `json:"status"`
 }
 
 type AgentsService struct {
@@ -43,7 +43,7 @@ func (s *AgentsService) ListAgentsWithStatus(
 		}
 
 		result = append(result, AgentStatus{
-			AgentID:  a.AgentID,
+			AgentID:  a.AgentId,
 			LastSeen: a.LastSeen.Time,
 			Status:   status,
 		})
