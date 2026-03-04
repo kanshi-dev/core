@@ -8,9 +8,15 @@ import (
 )
 
 type AgentStatus struct {
-	AgentID  string    `json:"agentId"`
-	LastSeen time.Time `json:"lastSeen"`
-	Status   string    `json:"status"`
+	AgentID     string    `json:"agentId"`
+	HostName    string    `json:"hostName"`
+	Os          string    `json:"os"`
+	Arch        string    `json:"arch"`
+	CpuCores    int32     `json:"cpuCores"`
+	TotalMemory int64     `json:"totalMemory"`
+	Version     string    `json:"version"`
+	LastSeen    time.Time `json:"lastSeen"`
+	Status      string    `json:"status"`
 }
 
 type AgentsService struct {
@@ -43,9 +49,15 @@ func (s *AgentsService) ListAgentsWithStatus(
 		}
 
 		result = append(result, AgentStatus{
-			AgentID:  a.AgentId,
-			LastSeen: a.LastSeen.Time,
-			Status:   status,
+			AgentID:     a.AgentId,
+			HostName:    a.HostName,
+			Os:          a.Os,
+			Arch:        a.Arch,
+			CpuCores:    a.CpuCores,
+			TotalMemory: a.TotalMemory,
+			Version:     a.Version,
+			LastSeen:    a.LastSeen.Time,
+			Status:      status,
 		})
 	}
 

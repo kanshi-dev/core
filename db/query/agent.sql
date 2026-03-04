@@ -8,6 +8,12 @@ WHERE agent_id = $1;
 -- name: ListAgents :many
 SELECT
     agent_id AS "agentId",
+    hostname AS "hostName",
+    os AS "os",
+    arch AS "arch",
+    cpu_cores AS "cpuCores",
+    total_memory AS "totalMemory",
+    version AS "version",
     last_seen AS "lastSeen"
 FROM agents
 ORDER BY last_seen DESC;

@@ -14,14 +14,26 @@ import (
 const listAgents = `-- name: ListAgents :many
 SELECT
     agent_id AS "agentId",
+    hostname AS "hostName",
+    os AS "os",
+    arch AS "arch",
+    cpu_cores AS "cpuCores",
+    total_memory AS "totalMemory",
+    version AS "version",
     last_seen AS "lastSeen"
 FROM agents
 ORDER BY last_seen DESC
 `
 
 type ListAgentsRow struct {
-	AgentId  string             `json:"agentId"`
-	LastSeen pgtype.Timestamptz `json:"lastSeen"`
+	AgentId     string             `json:"agentId"`
+	HostName    string             `json:"hostName"`
+	Os          string             `json:"os"`
+	Arch        string             `json:"arch"`
+	CpuCores    int32              `json:"cpuCores"`
+	TotalMemory int64              `json:"totalMemory"`
+	Version     string             `json:"version"`
+	LastSeen    pgtype.Timestamptz `json:"lastSeen"`
 }
 
 func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
@@ -33,7 +45,16 @@ func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
 	var items []ListAgentsRow
 	for rows.Next() {
 		var i ListAgentsRow
-		if err := rows.Scan(&i.AgentId, &i.LastSeen); err != nil {
+		if err := rows.Scan(
+			&i.AgentId,
+			&i.HostName,
+			&i.Os,
+			&i.Arch,
+			&i.CpuCores,
+			&i.TotalMemory,
+			&i.Version,
+			&i.LastSeen,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
