@@ -15,6 +15,7 @@ type Agent struct {
 	Arch        string             `json:"arch"`
 	CpuCores    int32              `json:"cpu_cores"`
 	TotalMemory int64              `json:"total_memory"`
+	DiskSize    int64              `json:"disk_size"`
 	Version     string             `json:"version"`
 	LastSeen    pgtype.Timestamptz `json:"last_seen"`
 }

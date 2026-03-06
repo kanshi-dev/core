@@ -19,6 +19,7 @@ message AgentReport {
   int32 cpu_cores = 5;
   int64 total_memory = 6;
   string version = 7;
+  int64 disk_size = 8;
 }
 
 message Batch {

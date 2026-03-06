@@ -27,10 +27,11 @@ INSERT INTO agents (
     arch,
     cpu_cores,
     total_memory,
+    disk_size,
     version,
     last_seen
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
 ON CONFLICT (agent_id)
     DO UPDATE SET
                   hostname = EXCLUDED.hostname,

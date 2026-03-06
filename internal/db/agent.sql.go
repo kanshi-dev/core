@@ -84,10 +84,11 @@ INSERT INTO agents (
     arch,
     cpu_cores,
     total_memory,
+    disk_size,
     version,
     last_seen
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
 ON CONFLICT (agent_id)
     DO UPDATE SET
                   hostname = EXCLUDED.hostname,
@@ -106,6 +107,7 @@ type UpsertAgentReportParams struct {
 	Arch        string `json:"arch"`
 	CpuCores    int32  `json:"cpu_cores"`
 	TotalMemory int64  `json:"total_memory"`
+	DiskSize    int64  `json:"disk_size"`
 	Version     string `json:"version"`
 }
 
@@ -117,6 +119,7 @@ func (q *Queries) UpsertAgentReport(ctx context.Context, arg UpsertAgentReportPa
 		arg.Arch,
 		arg.CpuCores,
 		arg.TotalMemory,
+		arg.DiskSize,
 		arg.Version,
 	)
 	return err

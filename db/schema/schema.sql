@@ -26,6 +26,7 @@ CREATE TABLE agents
     arch         TEXT        NOT NULL,
     cpu_cores    INT         NOT NULL,
     total_memory BIGINT      NOT NULL,
+    disk_size  BIGINT      NOT NULL,
     version      TEXT        NOT NULL,
     last_seen    TIMESTAMPTZ NOT NULL
 );
