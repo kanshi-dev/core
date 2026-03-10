@@ -35,6 +35,7 @@ func (s *Server) ReportAgent(
 			Arch:        req.Arch,
 			CpuCores:    req.CpuCores,
 			TotalMemory: req.TotalMemory,
+			DiskSize:    req.DiskSize,
 			Version:     req.Version,
 		},
 	)

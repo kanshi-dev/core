@@ -17,6 +17,7 @@ type AgentStatus struct {
 	Version     string    `json:"version"`
 	LastSeen    time.Time `json:"lastSeen"`
 	Status      string    `json:"status"`
+	DiskSize    int64     `json:"diskSize"`
 }
 
 type AgentsService struct {
@@ -58,6 +59,7 @@ func (s *AgentsService) ListAgentsWithStatus(
 			Version:     a.Version,
 			LastSeen:    a.LastSeen.Time,
 			Status:      status,
+			DiskSize:    a.DiskSize,
 		})
 	}
 

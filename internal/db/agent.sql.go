@@ -20,7 +20,8 @@ SELECT
     cpu_cores AS "cpuCores",
     total_memory AS "totalMemory",
     version AS "version",
-    last_seen AS "lastSeen"
+    last_seen AS "lastSeen",
+    disk_size AS "diskSize"
 FROM agents
 ORDER BY last_seen DESC
 `
@@ -34,6 +35,7 @@ type ListAgentsRow struct {
 	TotalMemory int64              `json:"totalMemory"`
 	Version     string             `json:"version"`
 	LastSeen    pgtype.Timestamptz `json:"lastSeen"`
+	DiskSize    int64              `json:"diskSize"`
 }
 
 func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
@@ -54,6 +56,7 @@ func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
 			&i.TotalMemory,
 			&i.Version,
 			&i.LastSeen,
+			&i.DiskSize,
 		); err != nil {
 			return nil, err
 		}

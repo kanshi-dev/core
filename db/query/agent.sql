@@ -14,7 +14,8 @@ SELECT
     cpu_cores AS "cpuCores",
     total_memory AS "totalMemory",
     version AS "version",
-    last_seen AS "lastSeen"
+    last_seen AS "lastSeen",
+    disk_size AS "diskSize"
 FROM agents
 ORDER BY last_seen DESC;
 
