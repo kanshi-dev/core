@@ -32,6 +32,7 @@ func (s *Server) ReportAgent(
 			AgentID:     req.AgentId,
 			Hostname:    req.Hostname,
 			Os:          req.Os,
+			Platform:    req.Platform,
 			Arch:        req.Arch,
 			CpuCores:    req.CpuCores,
 			TotalMemory: req.TotalMemory,

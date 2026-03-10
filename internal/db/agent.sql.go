@@ -16,6 +16,7 @@ SELECT
     agent_id AS "agentId",
     hostname AS "hostName",
     os AS "os",
+    platform,
     arch AS "arch",
     cpu_cores AS "cpuCores",
     total_memory AS "totalMemory",
@@ -30,6 +31,7 @@ type ListAgentsRow struct {
 	AgentId     string             `json:"agentId"`
 	HostName    string             `json:"hostName"`
 	Os          string             `json:"os"`
+	Platform    string             `json:"platform"`
 	Arch        string             `json:"arch"`
 	CpuCores    int32              `json:"cpuCores"`
 	TotalMemory int64              `json:"totalMemory"`
@@ -51,6 +53,7 @@ func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
 			&i.AgentId,
 			&i.HostName,
 			&i.Os,
+			&i.Platform,
 			&i.Arch,
 			&i.CpuCores,
 			&i.TotalMemory,
@@ -84,6 +87,7 @@ INSERT INTO agents (
     agent_id,
     hostname,
     os,
+    platform,
     arch,
     cpu_cores,
     total_memory,
@@ -91,7 +95,7 @@ INSERT INTO agents (
     version,
     last_seen
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
 ON CONFLICT (agent_id)
     DO UPDATE SET
                   hostname = EXCLUDED.hostname,
@@ -107,6 +111,7 @@ type UpsertAgentReportParams struct {
 	AgentID     string `json:"agent_id"`
 	Hostname    string `json:"hostname"`
 	Os          string `json:"os"`
+	Platform    string `json:"platform"`
 	Arch        string `json:"arch"`
 	CpuCores    int32  `json:"cpu_cores"`
 	TotalMemory int64  `json:"total_memory"`
@@ -119,6 +124,7 @@ func (q *Queries) UpsertAgentReport(ctx context.Context, arg UpsertAgentReportPa
 		arg.AgentID,
 		arg.Hostname,
 		arg.Os,
+		arg.Platform,
 		arg.Arch,
 		arg.CpuCores,
 		arg.TotalMemory,

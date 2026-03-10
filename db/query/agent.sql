@@ -10,6 +10,7 @@ SELECT
     agent_id AS "agentId",
     hostname AS "hostName",
     os AS "os",
+    platform,
     arch AS "arch",
     cpu_cores AS "cpuCores",
     total_memory AS "totalMemory",
@@ -25,6 +26,7 @@ INSERT INTO agents (
     agent_id,
     hostname,
     os,
+    platform,
     arch,
     cpu_cores,
     total_memory,
@@ -32,7 +34,7 @@ INSERT INTO agents (
     version,
     last_seen
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
 ON CONFLICT (agent_id)
     DO UPDATE SET
                   hostname = EXCLUDED.hostname,

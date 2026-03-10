@@ -15,11 +15,12 @@ message AgentReport {
   string agent_id = 1;
   string hostname = 2;
   string os = 3;
-  string arch = 4;
-  int32 cpu_cores = 5;
-  int64 total_memory = 6;
-  string version = 7;
-  int64 disk_size = 8;
+  string platform = 4;
+  string arch = 5;
+  int32 cpu_cores = 6;
+  int64 total_memory = 7;
+  string version = 8;
+  int64 disk_size = 9;
 }
 
 message Batch {

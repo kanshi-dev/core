@@ -94,11 +94,12 @@ type AgentReport struct {
 	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	Hostname      string                 `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
 	Os            string                 `protobuf:"bytes,3,opt,name=os,proto3" json:"os,omitempty"`
-	Arch          string                 `protobuf:"bytes,4,opt,name=arch,proto3" json:"arch,omitempty"`
-	CpuCores      int32                  `protobuf:"varint,5,opt,name=cpu_cores,json=cpuCores,proto3" json:"cpu_cores,omitempty"`
-	TotalMemory   int64                  `protobuf:"varint,6,opt,name=total_memory,json=totalMemory,proto3" json:"total_memory,omitempty"`
-	Version       string                 `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty"`
-	DiskSize      int64                  `protobuf:"varint,8,opt,name=disk_size,json=diskSize,proto3" json:"disk_size,omitempty"`
+	Platform      string                 `protobuf:"bytes,4,opt,name=platform,proto3" json:"platform,omitempty"`
+	Arch          string                 `protobuf:"bytes,5,opt,name=arch,proto3" json:"arch,omitempty"`
+	CpuCores      int32                  `protobuf:"varint,6,opt,name=cpu_cores,json=cpuCores,proto3" json:"cpu_cores,omitempty"`
+	TotalMemory   int64                  `protobuf:"varint,7,opt,name=total_memory,json=totalMemory,proto3" json:"total_memory,omitempty"`
+	Version       string                 `protobuf:"bytes,8,opt,name=version,proto3" json:"version,omitempty"`
+	DiskSize      int64                  `protobuf:"varint,9,opt,name=disk_size,json=diskSize,proto3" json:"disk_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -150,6 +151,13 @@ func (x *AgentReport) GetHostname() string {
 func (x *AgentReport) GetOs() string {
 	if x != nil {
 		return x.Os
+	}
+	return ""
+}
+
+func (x *AgentReport) GetPlatform() string {
+	if x != nil {
+		return x.Platform
 	}
 	return ""
 }
@@ -294,16 +302,17 @@ const file_proto_ingest_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x01R\x05value\x12.\n" +
 	"\x13timestamp_unix_nano\x18\x03 \x01(\x03R\x11timestampUnixNano\x12\x12\n" +
-	"\x04tags\x18\x04 \x03(\tR\x04tags\"\xdf\x01\n" +
+	"\x04tags\x18\x04 \x03(\tR\x04tags\"\xfb\x01\n" +
 	"\vAgentReport\x12\x19\n" +
 	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x1a\n" +
 	"\bhostname\x18\x02 \x01(\tR\bhostname\x12\x0e\n" +
-	"\x02os\x18\x03 \x01(\tR\x02os\x12\x12\n" +
-	"\x04arch\x18\x04 \x01(\tR\x04arch\x12\x1b\n" +
-	"\tcpu_cores\x18\x05 \x01(\x05R\bcpuCores\x12!\n" +
-	"\ftotal_memory\x18\x06 \x01(\x03R\vtotalMemory\x12\x18\n" +
-	"\aversion\x18\a \x01(\tR\aversion\x12\x1b\n" +
-	"\tdisk_size\x18\b \x01(\x03R\bdiskSize\"S\n" +
+	"\x02os\x18\x03 \x01(\tR\x02os\x12\x1a\n" +
+	"\bplatform\x18\x04 \x01(\tR\bplatform\x12\x12\n" +
+	"\x04arch\x18\x05 \x01(\tR\x04arch\x12\x1b\n" +
+	"\tcpu_cores\x18\x06 \x01(\x05R\bcpuCores\x12!\n" +
+	"\ftotal_memory\x18\a \x01(\x03R\vtotalMemory\x12\x18\n" +
+	"\aversion\x18\b \x01(\tR\aversion\x12\x1b\n" +
+	"\tdisk_size\x18\t \x01(\x03R\bdiskSize\"S\n" +
 	"\x05Batch\x12\x19\n" +
 	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12/\n" +
 	"\x06points\x18\x02 \x03(\v2\x17.kanshi.ingest.v1.PointR\x06points\"!\n" +

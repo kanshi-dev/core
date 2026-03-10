@@ -23,6 +23,7 @@ CREATE TABLE agents
     agent_id     TEXT PRIMARY KEY,
     hostname     TEXT        NOT NULL,
     os           TEXT        NOT NULL,
+    platform    TEXT        NOT NULL,
     arch         TEXT        NOT NULL,
     cpu_cores    INT         NOT NULL,
     total_memory BIGINT      NOT NULL,
