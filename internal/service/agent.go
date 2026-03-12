@@ -11,6 +11,7 @@ type AgentStatus struct {
 	AgentID     string    `json:"agentId"`
 	HostName    string    `json:"hostName"`
 	Os          string    `json:"os"`
+	Platform    string    `json:"platform"`
 	Arch        string    `json:"arch"`
 	CpuCores    int32     `json:"cpuCores"`
 	TotalMemory int64     `json:"totalMemory"`
@@ -53,6 +54,7 @@ func (s *AgentsService) ListAgentsWithStatus(
 			AgentID:     a.AgentId,
 			HostName:    a.HostName,
 			Os:          a.Os,
+			Platform:    a.Platform,
 			Arch:        a.Arch,
 			CpuCores:    a.CpuCores,
 			TotalMemory: a.TotalMemory,
