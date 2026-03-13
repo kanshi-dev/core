@@ -39,6 +39,9 @@ ON CONFLICT (agent_id)
     DO UPDATE SET
                   hostname = EXCLUDED.hostname,
                   os = EXCLUDED.os,
+                  platform = EXCLUDED.platform,
+                  disk_size = EXCLUDED.disk_size,
+                  last_seen = NOW(),
                   arch = EXCLUDED.arch,
                   cpu_cores = EXCLUDED.cpu_cores,
                   total_memory = EXCLUDED.total_memory,
