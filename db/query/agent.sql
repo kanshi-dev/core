@@ -45,6 +45,5 @@ ON CONFLICT (agent_id)
                   arch = EXCLUDED.arch,
                   cpu_cores = EXCLUDED.cpu_cores,
                   total_memory = EXCLUDED.total_memory,
-                  version = EXCLUDED.version,
-                  last_seen = EXCLUDED.last_seen;
+                  version = EXCLUDED.version;
 
