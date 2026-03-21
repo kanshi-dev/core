@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/kanshi-dev/core/internal/db"
 )
+
+var ErrNoDatabase = errors.New("database connection not established")
 
 type AgentStatus struct {
 	AgentID     string    `json:"agentId"`
@@ -33,6 +36,10 @@ func (s *AgentsService) ListAgentsWithStatus(
 	ctx context.Context,
 	offlineThreshold time.Duration,
 ) ([]AgentStatus, error) {
+
+	if s.queries == nil {
+		return nil, ErrNoDatabase
+	}
 
 	rows, err := s.queries.ListAgents(ctx)
 	if err != nil {

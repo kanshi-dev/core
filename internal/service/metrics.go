@@ -24,6 +24,10 @@ func (s *MetricsService) GetMetrics(
 	to time.Time,
 ) ([]db.GetMetricsByTimeRangeRow, error) {
 
+	if s.queries == nil {
+		return nil, ErrNoDatabase
+	}
+
 	return s.queries.GetMetricsByTimeRange(
 		ctx,
 		db.GetMetricsByTimeRangeParams{
@@ -43,6 +47,10 @@ func (s *MetricsService) GetAggregatedMetrics(
 	from time.Time,
 	to time.Time,
 ) ([]db.GetAggregatedMetricsRow, error) {
+
+	if s.queries == nil {
+		return nil, ErrNoDatabase
+	}
 
 	return s.queries.GetAggregatedMetrics(
 		ctx,

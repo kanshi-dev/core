@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/kanshi-dev/core/internal/db"
 	pb "github.com/kanshi-dev/core/proto"
 )
+
+var ErrNoDatabase = errors.New("database connection not established")
 
 type Server struct {
 	pb.UnimplementedIngestServiceServer
@@ -25,6 +28,10 @@ func (s *Server) ReportAgent(
 	ctx context.Context,
 	req *pb.AgentReport,
 ) (*pb.Ack, error) {
+
+	if s.queries == nil {
+		return nil, ErrNoDatabase
+	}
 
 	err := s.queries.UpsertAgentReport(
 		ctx,
@@ -48,6 +55,10 @@ func (s *Server) ReportAgent(
 }
 
 func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error) {
+	if s.queries == nil {
+		return nil, ErrNoDatabase
+	}
+
 	count := len(req.Points)
 
 	if count == 0 {

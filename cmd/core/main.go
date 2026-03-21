@@ -20,10 +20,15 @@ func main() {
 	pool, err := db.NewPool(ctx)
 
 	if err != nil {
-		log.Fatalf("failed to connect to db: %v", err)
+		log.Printf("Warning: failed to connect to db: %v. Continuing without DB.", err)
+	} else {
+		defer pool.Close()
 	}
-	defer pool.Close()
-	queries := db.New(pool)
+
+	var queries *db.Queries
+	if pool != nil {
+		queries = db.New(pool)
+	}
 
 	// Init GRPC
 	listener, err := net.Listen("tcp", ":50051")
