@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Kanshi v1.0.0 project board
+    url: https://github.com/orgs/kanshi-dev/projects/1
+    about: See what is planned, in progress, and prioritized before filing.
