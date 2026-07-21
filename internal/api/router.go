@@ -1,6 +1,9 @@
 package api
 
 import (
+	"context"
+	"time"
+
 	"github.com/gofiber/fiber/v3"
 	v1 "github.com/kanshi-dev/core/internal/api/v1"
 )
@@ -17,9 +20,17 @@ func InitRouter(app *fiber.App, apiSever *Server) {
 
 	//Health Endpoint
 	app.Get("/health", func(c fiber.Ctx) error {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"status": "ok",
-		})
+		statusCode := fiber.StatusServiceUnavailable
+		body := fiber.Map{"status": "degraded", "db": "error"}
+		if apiSever.ping != nil {
+			ctx, cancel := context.WithTimeout(c.Context(), time.Second)
+			defer cancel()
+			if apiSever.ping(ctx) == nil {
+				statusCode = fiber.StatusOK
+				body = fiber.Map{"status": "ok", "db": "ok"}
+			}
+		}
+		return c.Status(statusCode).JSON(body)
 	})
 
 	//Versioning Init
