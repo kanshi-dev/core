@@ -1,5 +1,7 @@
 # Kanshi Core
 
+[![CI](https://github.com/kanshi-dev/core/actions/workflows/ci.yaml/badge.svg)](https://github.com/kanshi-dev/core/actions/workflows/ci.yaml)
+
 Kanshi Core is a gRPC and REST server that manages metrics and agent data for the Kanshi monitoring system.
 
 ## Features
