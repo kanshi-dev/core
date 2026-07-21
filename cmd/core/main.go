@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"os"
 
 	"github.com/kanshi-dev/core/internal/api"
 	"github.com/kanshi-dev/core/internal/db"
@@ -14,6 +15,10 @@ import (
 )
 
 func main() {
+	apiKey := os.Getenv("KANSHI_API_KEY")
+	if apiKey == "" {
+		log.Fatal("configuration error: KANSHI_API_KEY is required")
+	}
 
 	//Init Database
 	ctx := context.Background()
@@ -36,7 +41,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(ingest.APIKeyAuth(apiKey)))
 	pb.RegisterIngestServiceServer(grpcServer, ingest.NewServer(queries))
 
 	go func() {

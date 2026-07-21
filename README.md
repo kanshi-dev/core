@@ -29,9 +29,11 @@ Kanshi Core is a gRPC and REST server that manages metrics and agent data for th
 
 ```bash
 # Ensure you have a running PostgreSQL/TimescaleDB instance
-# and the DATABASE_URL environment variable set.
+export KANSHI_API_KEY=replace-with-a-shared-secret
 go run cmd/core/main.go
 ```
+
+`KANSHI_API_KEY` is required and must match the value configured on every agent.
 
 ## Database Setup
 
