@@ -9,6 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/kanshi-dev/core/internal/db"
 	proto "github.com/kanshi-dev/core/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // mockDBTX mocks the pgx DBTX interface for testing.
@@ -109,6 +111,9 @@ func TestIngestBatch_InsertFailure(t *testing.T) {
 	// Assert
 	if err == nil {
 		t.Fatalf("expected error when insert fails, got nil")
+	}
+	if status.Code(err) != codes.Internal {
+		t.Fatalf("expected Internal status, got %s", status.Code(err))
 	}
 	if resp != nil {
 		t.Fatalf("expected nil response on error, got %v", resp)
