@@ -17,7 +17,7 @@ Kanshi Core is a gRPC and REST server that manages metrics and agent data for th
 ## REST API Endpoints
 
 - `GET /api/v1/agents`: List all registered agents and their current status (online/offline).
-- `GET /api/v1/metrics`: Query historical metrics for a specific agent.
+- `GET /api/v1/metrics`: Query historical metrics for a specific agent. Explicit `from` and `to` RFC3339 timestamps may span at most one hour.
 - `GET /api/v1/metrics/aggregate`: Query aggregated metrics (min, max, avg) over a time interval.
     - Example: `${API_URL}/api/v1/metrics/aggregate?agentId=${agentId}&name=${name}&interval=30s`
     - Supported Intervals: `30s`, `1m`, `5m`, `15m`
