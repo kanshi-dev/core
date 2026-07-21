@@ -9,6 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kanshi-dev/core/internal/db"
 	pb "github.com/kanshi-dev/core/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var ErrNoDatabase = errors.New("database connection not established")
@@ -92,13 +94,13 @@ func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error
 		Tags:       tags,
 	})
 	if err != nil {
-		log.Fatalf("failed to insert metrics batch: %v", err)
-		return nil, err
+		log.Printf("failed to insert metrics batch: %v", err)
+		return nil, status.Error(codes.Internal, "failed to insert metrics batch")
 	}
 
 	if err := s.queries.UpsertAgentHeartbeat(ctx, req.AgentId); err != nil {
-		log.Printf("failed to upsert heartbeat for agent %s: %v", req.AgentId, err)
-		return nil, err
+		log.Printf("warning: failed to upsert heartbeat for agent %s: %v", req.AgentId, err)
+		return &pb.Ack{Accepted: int64(count)}, nil
 	}
 
 	return &pb.Ack{Accepted: int64(count)}, nil
