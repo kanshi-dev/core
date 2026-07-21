@@ -10,6 +10,8 @@ import (
 	"github.com/kanshi-dev/core/internal/service"
 )
 
+const maxMetricTimeRange = time.Hour
+
 // Parse metric params
 func parseMetricParams(c fiber.Ctx) (agentID string, name string, err error) {
 	agentID = c.Query("agentId")
@@ -42,13 +44,15 @@ func parseTimeRange(c fiber.Ctx) (time.Time, time.Time, error) {
 		return time.Time{}, time.Time{}, errors.New("invalid to Time Param (RFC3339)")
 	}
 
-	// Check if toTime is before fromTime
 	if toTime.Before(fromTime) {
 		return time.Time{}, time.Time{}, errors.New("to Time must be after from Time")
 	}
 
-	//Check if the time range exceeds 1 hour
-	if time.Since(fromTime) > time.Hour {
+	if toTime.After(now) {
+		return time.Time{}, time.Time{}, errors.New("to Time must not be in the future")
+	}
+
+	if toTime.Sub(fromTime) > maxMetricTimeRange {
 		return time.Time{}, time.Time{}, errors.New("time range exceeds 1 hour")
 	}
 
