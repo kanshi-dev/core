@@ -31,8 +31,10 @@ func main() {
 	}
 
 	var queries *db.Queries
+	var ping func(context.Context) error
 	if pool != nil {
 		queries = db.New(pool)
+		ping = pool.Ping
 	}
 
 	// Init GRPC
@@ -56,7 +58,7 @@ func main() {
 	metricsService := service.NewMetricsService(queries)
 
 	// Init Api
-	apiServer := api.NewServer(agentService, metricsService)
+	apiServer := api.NewServer(agentService, metricsService, ping)
 
 	if err := apiServer.App.Listen(":8080"); err != nil {
 		log.Fatal(err)
