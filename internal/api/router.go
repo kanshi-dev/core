@@ -2,13 +2,15 @@ package api
 
 import (
 	"context"
+	"crypto/subtle"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
 	v1 "github.com/kanshi-dev/core/internal/api/v1"
 )
 
-func InitRouter(app *fiber.App, apiSever *Server) {
+func InitRouter(app *fiber.App, apiSever *Server, dashboardKey string) {
 
 	//Root Endpoint
 	app.Get("/", func(c fiber.Ctx) error {
@@ -38,6 +40,15 @@ func InitRouter(app *fiber.App, apiSever *Server) {
 
 	// Verson 1
 	v1Group := api.Group("/v1")
+	v1Group.Use(func(c fiber.Ctx) error {
+		if c.Method() == fiber.MethodOptions {
+			return c.Next()
+		}
+		if !authorized(c.Get(fiber.HeaderAuthorization), dashboardKey) {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"code": fiber.StatusUnauthorized, "message": "unauthorized", "data": nil})
+		}
+		return c.Next()
+	})
 
 	// Calls Init() from v1/router.go
 	v1.Init(v1Group, apiSever.MetricsService, apiSever.AgentService)
@@ -49,4 +60,9 @@ func InitRouter(app *fiber.App, apiSever *Server) {
 			"path":  c.Path(),
 		})
 	})
+}
+
+func authorized(authorization, dashboardKey string) bool {
+	provided, ok := strings.CutPrefix(authorization, "Bearer ")
+	return ok && provided != "" && subtle.ConstantTimeCompare([]byte(provided), []byte(dashboardKey)) == 1
 }

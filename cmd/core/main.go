@@ -19,6 +19,10 @@ func main() {
 	if apiKey == "" {
 		log.Fatal("configuration error: KANSHI_API_KEY is required")
 	}
+	dashboardKey := os.Getenv("KANSHI_DASHBOARD_KEY")
+	if dashboardKey == "" {
+		log.Fatal("configuration error: KANSHI_DASHBOARD_KEY is required")
+	}
 
 	//Init Database
 	ctx := context.Background()
@@ -28,6 +32,9 @@ func main() {
 		log.Printf("Warning: failed to connect to db: %v. Continuing without DB.", err)
 	} else {
 		defer pool.Close()
+		if err := db.Migrate(ctx, pool); err != nil {
+			log.Fatalf("failed to apply database migrations: %v", err)
+		}
 	}
 
 	var queries *db.Queries
@@ -58,7 +65,7 @@ func main() {
 	metricsService := service.NewMetricsService(queries)
 
 	// Init Api
-	apiServer := api.NewServer(agentService, metricsService, ping)
+	apiServer := api.NewServer(agentService, metricsService, ping, dashboardKey, os.Getenv("KANSHI_ALLOWED_ORIGINS"))
 
 	if err := apiServer.App.Listen(":8080"); err != nil {
 		log.Fatal(err)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -15,9 +16,16 @@ type Server struct {
 	ping           func(context.Context) error
 }
 
-func NewServer(agentService *service.AgentsService, metricsService *service.MetricsService, ping func(context.Context) error) *Server {
+func NewServer(agentService *service.AgentsService, metricsService *service.MetricsService, ping func(context.Context) error, dashboardKey, allowedOrigins string) *Server {
 	app := fiber.New()
-	app.Use(cors.New())
+	if allowedOrigins == "" {
+		allowedOrigins = "http://localhost:5173,http://127.0.0.1:5173"
+	}
+	origins := strings.Split(allowedOrigins, ",")
+	for i := range origins {
+		origins[i] = strings.TrimSpace(origins[i])
+	}
+	app.Use(cors.New(cors.Config{AllowOrigins: origins, AllowHeaders: []string{"Authorization", "Content-Type"}}))
 	server := &Server{
 		App:            app,
 		MetricsService: metricsService,
@@ -25,7 +33,7 @@ func NewServer(agentService *service.AgentsService, metricsService *service.Metr
 		ping:           ping,
 	}
 
-	InitRouter(app, server)
+	InitRouter(app, server, dashboardKey)
 
 	return server
 }

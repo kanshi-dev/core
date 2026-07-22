@@ -27,7 +27,7 @@ func TestHealth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := NewServer(nil, nil, tt.ping).App.Test(
+			response, err := NewServer(nil, nil, tt.ping, "dashboard-secret", "").App.Test(
 				httptest.NewRequest("GET", "/health", nil),
 				fiber.TestConfig{Timeout: 2 * time.Second},
 			)
@@ -47,5 +47,48 @@ func TestHealth(t *testing.T) {
 				t.Fatalf("got code=%d body=%+v", response.StatusCode, body)
 			}
 		})
+	}
+}
+
+func TestAPIAuthenticationAndCORS(t *testing.T) {
+	app := NewServer(nil, nil, nil, "dashboard-secret", "https://dashboard.example.com").App
+	for _, tt := range []struct {
+		name, authorization string
+		want                int
+	}{
+		{"missing", "", 401},
+		{"malformed", "dashboard-secret", 401},
+		{"incorrect", "Bearer wrong", 401},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/api/v1/agents", nil)
+			req.Header.Set("Authorization", tt.authorization)
+			response, err := app.Test(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if response.StatusCode != tt.want {
+				t.Fatalf("got %d, want %d", response.StatusCode, tt.want)
+			}
+		})
+	}
+	if !authorized("Bearer dashboard-secret", "dashboard-secret") {
+		t.Fatal("valid bearer token was rejected")
+	}
+
+	for _, origin := range []struct{ value, want string }{
+		{"https://dashboard.example.com", "https://dashboard.example.com"},
+		{"https://evil.example.com", ""},
+	} {
+		req := httptest.NewRequest("OPTIONS", "/api/v1/agents", nil)
+		req.Header.Set("Origin", origin.value)
+		req.Header.Set("Access-Control-Request-Method", "GET")
+		response, err := app.Test(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := response.Header.Get("Access-Control-Allow-Origin"); got != origin.want {
+			t.Fatalf("origin %q: got %q, want %q", origin.value, got, origin.want)
+		}
 	}
 }
