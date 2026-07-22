@@ -9,7 +9,9 @@ RUN go build -o kanshi-core cmd/core/main.go
 FROM alpine:latest
 
 WORKDIR /app
+RUN addgroup -S kanshi && adduser -S -G kanshi kanshi
 COPY --from=builder /app/kanshi-core .
+USER kanshi
 
 EXPOSE 50051
 EXPOSE 8080

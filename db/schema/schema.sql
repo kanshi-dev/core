@@ -18,7 +18,7 @@ CREATE INDEX IF NOT EXISTS idx_metrics_agent_ts
     ON metrics (agent_id, ts DESC);
 
 
-CREATE TABLE agents
+CREATE TABLE IF NOT EXISTS agents
 (
     agent_id     TEXT PRIMARY KEY,
     hostname     TEXT        NOT NULL,
@@ -31,3 +31,5 @@ CREATE TABLE agents
     version      TEXT        NOT NULL,
     last_seen    TIMESTAMPTZ NOT NULL
 );
+
+SELECT add_retention_policy('metrics', INTERVAL '30 days', if_not_exists => TRUE);

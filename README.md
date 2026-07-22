@@ -42,3 +42,8 @@ Schema is located in `db/schema/schema.sql`.
 ## Purpose
 
 This project is the central component of the Kanshi data pipeline: Agent → [Core](https://github.com/kanshi-dev/core)
+# Quickstart and support
+
+See the [v1 quickstart](QUICKSTART.md) to run the release stack and install an agent.
+
+Kanshi follows semantic versioning from `v1.0.0`. Bug fixes ship in `v1.0.x`, features wait for the next minor release, and breaking API changes wait for the next major release. Release notes are generated from merged pull requests. Use GitHub issues for public support and [private vulnerability reporting](SECURITY.md) for security reports. The latest `v1.0.x` release is supported.
