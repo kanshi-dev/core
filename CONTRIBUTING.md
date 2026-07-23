@@ -20,9 +20,11 @@ Kanshi is built from three repos: [core](https://github.com/kanshi-dev/core), [a
 ## Development
 
 ```bash
-docker compose -f ../infra/docker-compose.yaml up -d   # TimescaleDB
-go run ./cmd/core                                      # REST :8080, gRPC :50051
-go build ./... && go vet ./... && go test ./...        # what CI runs
+docker run --rm -d --name kanshi-db -p 5432:5432 \
+  -e POSTGRES_DB=kanshi -e POSTGRES_USER=kanshi -e POSTGRES_PASSWORD=kanshi \
+  timescale/timescaledb:latest-pg17
+KANSHI_API_KEY=dev KANSHI_DASHBOARD_KEY=dev go run ./cmd/core
+go build ./... && go vet ./... && go test ./...
 ```
 
 ## Versioning
