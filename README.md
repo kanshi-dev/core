@@ -46,7 +46,7 @@ go build ./...
 
 ## Start the complete stack
 
-Use the [local demo](https://github.com/kanshi-dev/demo) or follow [QUICKSTART.md](QUICKSTART.md). The AWS test deployment lives in [kanshi-dev/infra](https://github.com/kanshi-dev/infra/tree/main/deployment/infra).
+Use the [local demo](https://github.com/kanshi-dev/demo) or follow [QUICKSTART.md](QUICKSTART.md). The AWS test deployment lives in [kanshi-dev/infra](https://github.com/kanshi-dev/infra).
 
 ## Support and security
 
