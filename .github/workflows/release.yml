@@ -36,7 +36,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-      - uses: aquasecurity/trivy-action@0.32.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/kanshi-dev/core:${{ steps.meta.outputs.version }}
           format: sarif
