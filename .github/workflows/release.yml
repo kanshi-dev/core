@@ -44,6 +44,6 @@ jobs:
       - uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
-      - run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+      - run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag ${{ contains(github.ref_name, '-') && '--prerelease' || '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
