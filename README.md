@@ -2,48 +2,52 @@
 
 [![CI](https://github.com/kanshi-dev/core/actions/workflows/ci.yaml/badge.svg)](https://github.com/kanshi-dev/core/actions/workflows/ci.yaml)
 
-Kanshi Core is a gRPC and REST server that manages metrics and agent data for the Kanshi monitoring system.
+Kanshi Core receives authenticated host metrics over gRPC, stores them in TimescaleDB, and serves the authenticated REST API used by the Kanshi dashboard.
 
-## Features
+## Interfaces
 
-- **gRPC Ingestion**: Receives `IngestBatch` and `ReportAgent` requests from Kanshi Agent.
-- **Persistent Storage**: Stores metrics and agent metadata in TimescaleDB.
-- **REST API**: Provides endpoints for querying agent status and historical metrics.
+| Interface | Address | Authentication |
+| --- | --- | --- |
+| Health | `GET :8080/health` | None |
+| REST API | `/api/v1` on `:8080` | `Authorization: Bearer <KANSHI_DASHBOARD_KEY>` |
+| Agent ingest | gRPC on `:50051` | `x-api-key: <KANSHI_API_KEY>` |
 
-## Architecture
+REST responses use `{ "code": 200, "message": "ok", "data": ... }`.
 
-- **gRPC Server**: Port `:50051` (for agent communication)
-- **REST API**: Port `:8080` (for querying data)
-- **Database**: TimescaleDB (PostgreSQL with time-series extensions)
+## REST API
 
-## REST API Endpoints
+- `GET /api/v1/agents`
+- `GET /api/v1/metrics?agentId=&name=&from=&to=`
+- `GET /api/v1/metrics/aggregate?agentId=&name=&interval=`
 
-- `GET /api/v1/agents`: List all registered agents and their current status (online/offline).
-- `GET /api/v1/metrics`: Query historical metrics for a specific agent. Explicit `from` and `to` RFC3339 timestamps may span at most one hour.
-- `GET /api/v1/metrics/aggregate`: Query aggregated metrics (min, max, avg) over a time interval.
-    - Example: `${API_URL}/api/v1/metrics/aggregate?agentId=${agentId}&name=${name}&interval=30s`
-    - Supported Intervals: `30s`, `1m`, `5m`, `15m`
-    - Supported Metrics: `cpu.used_percent`, `mem.used_percent`, `disk.used_percent`
+Supported metrics are `cpu.used_percent`, `mem.used_percent`, and `disk.used_percent`. Aggregate intervals are `30s`, `1m`, `5m`, and `15m`. Explicit RFC3339 metric ranges may span at most one hour.
 
-## Run
+## Run from source
 
-```bash
-# Ensure you have a running PostgreSQL/TimescaleDB instance
-export KANSHI_API_KEY=replace-with-a-shared-secret
-go run cmd/core/main.go
+Start TimescaleDB, then configure both shared keys:
+
+```sh
+export DB_HOST=127.0.0.1
+export DB_PASSWORD=replace-me
+export KANSHI_API_KEY=replace-with-an-ingest-key
+export KANSHI_DASHBOARD_KEY=replace-with-a-dashboard-key
+go run ./cmd/core
 ```
 
-`KANSHI_API_KEY` is required and must match the value configured on every agent.
+Core applies its schema and 30-day retention policy at startup. SQL lives in `db/schema` and `db/query`; regenerate sqlc output with `sqlc generate`. Never hand-edit `internal/db/*.sql.go`.
 
-## Database Setup
+## Verify
 
-Schema is located in `db/schema/schema.sql`.
+```sh
+go test ./...
+go vet ./...
+go build ./...
+```
 
-## Purpose
+## Start the complete stack
 
-This project is the central component of the Kanshi data pipeline: Agent → [Core](https://github.com/kanshi-dev/core)
-# Quickstart and support
+Use the [local demo](https://github.com/kanshi-dev/demo) or follow [QUICKSTART.md](QUICKSTART.md). The AWS test deployment lives in [kanshi-dev/infra](https://github.com/kanshi-dev/infra/tree/main/deployment/infra).
 
-See the [v1 quickstart](QUICKSTART.md) to run the release stack and install an agent.
+## Support and security
 
-Kanshi follows semantic versioning from `v1.0.0`. Bug fixes ship in `v1.0.x`, features wait for the next minor release, and breaking API changes wait for the next major release. Release notes are generated from merged pull requests. Use GitHub issues for public support and [private vulnerability reporting](SECURITY.md) for security reports. The latest `v1.0.x` release is supported.
+Use GitHub issues for public support. Report vulnerabilities through [private vulnerability reporting](SECURITY.md). Kanshi follows semantic versioning from `v1.0.0`.
