@@ -1,6 +1,6 @@
 # Kanshi quickstart
 
-The current public test release uses Core and Agent `v1.0.0-rc3` with Dashboard `v1.0.0-rc4`.
+The current stable release uses Core, Agent, and Dashboard `v1.0.0`.
 
 ## Start locally
 
@@ -24,7 +24,7 @@ Core initializes TimescaleDB and applies the 30-day retention policy. Open `http
 
 ```sh
 curl -fsSL https://kanshi.dev/install.sh |
-  KANSHI_VERSION=v1.0.0-rc3 sh
+  KANSHI_VERSION=v1.0.0 sh
 
 export KANSHI_CORE_ADDR=your-server:50051
 export KANSHI_API_KEY=the-ingest-key-from-.env
@@ -35,7 +35,7 @@ For systemd Linux:
 
 ```sh
 curl -fsSL https://kanshi.dev/install.sh |
-  sudo KANSHI_VERSION=v1.0.0-rc3 \
+  sudo KANSHI_VERSION=v1.0.0 \
   KANSHI_CORE_ADDR=your-server:50051 \
   KANSHI_API_KEY=the-ingest-key-from-.env \
   sh -s -- --systemd
