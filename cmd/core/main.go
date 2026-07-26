@@ -5,7 +5,10 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
+	"time"
 
+	"github.com/kanshi-dev/core/internal/alert"
 	"github.com/kanshi-dev/core/internal/api"
 	"github.com/kanshi-dev/core/internal/db"
 	"github.com/kanshi-dev/core/internal/ingest"
@@ -63,12 +66,46 @@ func main() {
 	//Setup Services
 	agentService := service.NewAgentsService(queries)
 	metricsService := service.NewMetricsService(queries)
+	alertService := service.NewAlertsService(queries)
+
+	// Start alert evaluation and webhook delivery when a database is available.
+	if queries != nil {
+		webhooks := alert.NewDispatcher(parseWebhookURLs(os.Getenv("KANSHI_WEBHOOK_URLS")), os.Getenv("KANSHI_WEBHOOK_SECRET"), queries)
+		evaluator := alert.NewEvaluator(queries, webhooks, parseAlertInterval(os.Getenv("KANSHI_ALERT_INTERVAL")))
+		go evaluator.Run(ctx)
+	}
 
 	// Init Api
-	apiServer := api.NewServer(agentService, metricsService, ping, dashboardKey, os.Getenv("KANSHI_ALLOWED_ORIGINS"))
+	apiServer := api.NewServer(agentService, metricsService, alertService, ping, dashboardKey, os.Getenv("KANSHI_ALLOWED_ORIGINS"))
 
 	if err := apiServer.App.Listen(":8080"); err != nil {
 		log.Fatal(err)
 	}
 
+}
+
+func parseWebhookURLs(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	urls := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			urls = append(urls, p)
+		}
+	}
+	return urls
+}
+
+func parseAlertInterval(raw string) time.Duration {
+	if raw == "" {
+		return 30 * time.Second
+	}
+	d, err := time.ParseDuration(raw)
+	if err != nil || d <= 0 {
+		log.Printf("invalid KANSHI_ALERT_INTERVAL %q, using 30s", raw)
+		return 30 * time.Second
+	}
+	return d
 }
