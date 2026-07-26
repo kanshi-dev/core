@@ -19,8 +19,21 @@ REST responses use `{ "code": 200, "message": "ok", "data": ... }`.
 - `GET /api/v1/agents`
 - `GET /api/v1/metrics?agentId=&name=&from=&to=`
 - `GET /api/v1/metrics/aggregate?agentId=&name=&interval=`
+- `GET|POST /api/v1/alerts/rules`, `PUT|DELETE /api/v1/alerts/rules/:id`
+- `GET /api/v1/alerts/active`
+- `GET /api/v1/alerts/events?limit=`
 
 Supported metrics are `cpu.used_percent`, `mem.used_percent`, and `disk.used_percent`. Aggregate intervals are `30s`, `1m`, `5m`, and `15m`. Explicit RFC3339 metric ranges may span at most one hour.
+
+## Alerting
+
+Core evaluates persisted alert rules on a fixed schedule and records firing and resolved transitions. A rule targets `cpu.used_percent`, `mem.used_percent`, `disk.used_percent`, or `agent.offline`, globally or for a single agent, and stays disabled until enabled. State lives in the `alert_events` table and survives a restart, so a sustained breach fires once and recovery resolves once. Each transition is delivered to every configured webhook with an optional HMAC-SHA256 signature and bounded retries.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `KANSHI_ALERT_INTERVAL` | `30s` | How often rules are evaluated (Go duration) |
+| `KANSHI_WEBHOOK_URLS` | *(empty)* | Comma-separated webhook URLs for alert delivery |
+| `KANSHI_WEBHOOK_SECRET` | *(empty)* | Optional secret for HMAC-SHA256 payload signing |
 
 ## Run from source
 
