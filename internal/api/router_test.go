@@ -27,7 +27,7 @@ func TestHealth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := NewServer(nil, nil, tt.ping, "dashboard-secret", "").App.Test(
+			response, err := NewServer(nil, nil, nil, tt.ping, "dashboard-secret", "").App.Test(
 				httptest.NewRequest("GET", "/health", nil),
 				fiber.TestConfig{Timeout: 2 * time.Second},
 			)
@@ -51,7 +51,7 @@ func TestHealth(t *testing.T) {
 }
 
 func TestAPIAuthenticationAndCORS(t *testing.T) {
-	app := NewServer(nil, nil, nil, "dashboard-secret", "https://dashboard.example.com").App
+	app := NewServer(nil, nil, nil, nil, "dashboard-secret", "https://dashboard.example.com").App
 	for _, tt := range []struct {
 		name, authorization string
 		want                int
