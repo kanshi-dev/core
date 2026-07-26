@@ -1,6 +1,6 @@
 # Contributing to kanshi-core
 
-Kanshi is split across the [kanshi-dev repositories](https://github.com/kanshi-dev). Product direction lives in the private engineering handbook; GitHub issues and Projects track execution. Please pick up (or file) an issue before opening a PR.
+Kanshi's three main repositories are [Core](https://github.com/kanshi-dev/core), [Agent](https://github.com/kanshi-dev/agent), and [Dashboard](https://github.com/kanshi-dev/dashboard). Product direction lives in the private engineering handbook; GitHub issues and Projects track execution across them. Please pick up (or file) an issue before opening a PR.
 
 ## Workflow
 
