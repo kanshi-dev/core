@@ -33,3 +33,33 @@ CREATE TABLE IF NOT EXISTS agents
 );
 
 SELECT add_retention_policy('metrics', INTERVAL '30 days', if_not_exists => TRUE);
+
+
+CREATE TABLE IF NOT EXISTS alert_rules
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name       TEXT             NOT NULL,
+    metric     TEXT             NOT NULL, -- cpu.used_percent | mem.used_percent | disk.used_percent | agent.offline
+    comparator TEXT             NOT NULL, -- gt | lt (agent.offline uses gt on seconds offline)
+    threshold  DOUBLE PRECISION NOT NULL, -- percent, or seconds for agent.offline
+    agent_id   TEXT,                      -- NULL = global (all agents)
+    enabled    BOOLEAN          NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ      NOT NULL DEFAULT NOW()
+);
+
+
+CREATE TABLE IF NOT EXISTS alert_events
+(
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    rule_id        BIGINT           NOT NULL REFERENCES alert_rules (id) ON DELETE CASCADE,
+    agent_id       TEXT             NOT NULL,
+    state          TEXT             NOT NULL, -- firing | resolved
+    value          DOUBLE PRECISION NOT NULL,
+    created_at     TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    webhook_status TEXT             NOT NULL DEFAULT 'pending', -- pending | delivered | failed | skipped
+    webhook_error  TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_alert_events_rule_agent_ts
+    ON alert_events (rule_id, agent_id, created_at DESC);

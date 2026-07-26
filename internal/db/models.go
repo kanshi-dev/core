@@ -21,6 +21,29 @@ type Agent struct {
 	LastSeen    pgtype.Timestamptz `json:"last_seen"`
 }
 
+type AlertEvent struct {
+	ID            int64              `json:"id"`
+	RuleID        int64              `json:"rule_id"`
+	AgentID       string             `json:"agent_id"`
+	State         string             `json:"state"`
+	Value         float64            `json:"value"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	WebhookStatus string             `json:"webhook_status"`
+	WebhookError  pgtype.Text        `json:"webhook_error"`
+}
+
+type AlertRule struct {
+	ID         int64              `json:"id"`
+	Name       string             `json:"name"`
+	Metric     string             `json:"metric"`
+	Comparator string             `json:"comparator"`
+	Threshold  float64            `json:"threshold"`
+	AgentID    pgtype.Text        `json:"agent_id"`
+	Enabled    bool               `json:"enabled"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Metric struct {
 	AgentID string             `json:"agent_id"`
 	Name    string             `json:"name"`
