@@ -11,6 +11,7 @@ Kanshi Core receives authenticated host metrics over gRPC, stores them in Timesc
 | Health | `GET :8080/health` | None |
 | REST API | `/api/v1` on `:8080` | `Authorization: Bearer <KANSHI_DASHBOARD_KEY>` |
 | Agent ingest | gRPC on `:50051` | `x-api-key: <KANSHI_API_KEY>` |
+| OTLP traces and logs | OTLP/gRPC on `:50051` | `x-api-key: <KANSHI_API_KEY>` |
 
 REST responses use `{ "code": 200, "message": "ok", "data": ... }`.
 
@@ -22,8 +23,25 @@ REST responses use `{ "code": 200, "message": "ok", "data": ... }`.
 - `GET|POST /api/v1/alerts/rules`, `PUT|DELETE /api/v1/alerts/rules/:id`
 - `GET /api/v1/alerts/active`
 - `GET /api/v1/alerts/events?limit=`
+- `GET /api/v1/services?from=&to=&limit=`
+- `GET /api/v1/traces?service=&status=&minDurationMs=&traceId=&from=&to=&limit=`
+- `GET /api/v1/traces/:traceId`
+- `GET /api/v1/logs?service=&traceId=&spanId=&from=&to=&limit=`
 
 Supported metrics are `cpu.used_percent`, `mem.used_percent`, and `disk.used_percent`. Aggregate intervals are `30s`, `1m`, `5m`, and `15m`. Explicit RFC3339 metric ranges may span at most one hour.
+
+## Application telemetry
+
+Core accepts the standard OTLP trace and log gRPC services on port `50051`. Configure an upstream OpenTelemetry Collector exporter with the `x-api-key` header. OTLP/HTTP is not supported in v1.2.
+
+Ingestion is bounded to a 4 MiB gRPC message, 1,000 spans or log records per request, 64 attributes per resource or record, 32 KiB of encoded attributes, and 16 KiB log bodies. Trace and span IDs, finite numeric values, timestamps, service identity, and field sizes are validated before persistence. REST searches default to one hour, allow at most 24 hours, return 100 records by default, and cap `limit` at 500.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `KANSHI_TRACE_RETENTION` | `168h` | Trace retention as a Go duration, minimum `1h` |
+| `KANSHI_LOG_RETENTION` | `72h` | Correlated log retention as a Go duration, minimum `1h` |
+
+Sample production traces. Parent-based `traceidratio` sampling at `0.1` is a reasonable starting point; adjust from measured volume. Avoid unsampled high-volume debug logs, redact secrets before export, and never attach credentials or request bodies as attributes.
 
 ## Alerting
 

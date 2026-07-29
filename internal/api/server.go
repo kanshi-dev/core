@@ -10,14 +10,15 @@ import (
 )
 
 type Server struct {
-	App            *fiber.App
-	MetricsService *service.MetricsService
-	AgentService   *service.AgentsService
-	AlertService   *service.AlertsService
-	ping           func(context.Context) error
+	App              *fiber.App
+	MetricsService   *service.MetricsService
+	AgentService     *service.AgentsService
+	AlertService     *service.AlertsService
+	TelemetryService *service.TelemetryService
+	ping             func(context.Context) error
 }
 
-func NewServer(agentService *service.AgentsService, metricsService *service.MetricsService, alertService *service.AlertsService, ping func(context.Context) error, dashboardKey, allowedOrigins string) *Server {
+func NewServer(agentService *service.AgentsService, metricsService *service.MetricsService, alertService *service.AlertsService, telemetryService *service.TelemetryService, ping func(context.Context) error, dashboardKey, allowedOrigins string) *Server {
 	app := fiber.New()
 	if allowedOrigins == "" {
 		allowedOrigins = "http://localhost:5173,http://127.0.0.1:5173"
@@ -28,11 +29,12 @@ func NewServer(agentService *service.AgentsService, metricsService *service.Metr
 	}
 	app.Use(cors.New(cors.Config{AllowOrigins: origins, AllowHeaders: []string{"Authorization", "Content-Type"}}))
 	server := &Server{
-		App:            app,
-		MetricsService: metricsService,
-		AgentService:   agentService,
-		AlertService:   alertService,
-		ping:           ping,
+		App:              app,
+		MetricsService:   metricsService,
+		AgentService:     agentService,
+		AlertService:     alertService,
+		TelemetryService: telemetryService,
+		ping:             ping,
 	}
 
 	InitRouter(app, server, dashboardKey)

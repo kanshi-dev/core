@@ -2,7 +2,11 @@
 
 ## Supported versions
 
-The latest `v1.0.x` release receives security fixes.
+The latest stable minor release receives security fixes.
+
+## Deployment boundary
+
+OTLP/gRPC uses the same required `x-api-key` as Agent ingestion. Keep port `50051` private or behind TLS, rotate the shared key if exposed, and redact secrets before telemetry reaches the Collector. Core rejects oversized, malformed, non-finite, future, and retention-expired telemetry.
 
 ## Report a vulnerability
 
