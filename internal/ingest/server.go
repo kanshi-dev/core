@@ -34,6 +34,9 @@ func (s *Server) ReportAgent(
 	if s.queries == nil {
 		return nil, ErrNoDatabase
 	}
+	if err := validateReport(req); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
 	err := s.queries.UpsertAgentReport(
 		ctx,
@@ -59,6 +62,9 @@ func (s *Server) ReportAgent(
 func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error) {
 	if s.queries == nil {
 		return nil, ErrNoDatabase
+	}
+	if err := validateBatch(req, time.Now()); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	count := len(req.Points)

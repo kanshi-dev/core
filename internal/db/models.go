@@ -51,3 +51,28 @@ type Metric struct {
 	Ts      pgtype.Timestamptz `json:"ts"`
 	Tags    []string           `json:"tags"`
 }
+
+type OtelLog struct {
+	Ts          pgtype.Timestamptz `json:"ts"`
+	ServiceName string             `json:"service_name"`
+	Severity    string             `json:"severity"`
+	Body        string             `json:"body"`
+	TraceID     string             `json:"trace_id"`
+	SpanID      string             `json:"span_id"`
+	Attributes  []byte             `json:"attributes"`
+}
+
+type OtelSpan struct {
+	TraceID       string             `json:"trace_id"`
+	SpanID        string             `json:"span_id"`
+	ParentSpanID  string             `json:"parent_span_id"`
+	ServiceName   string             `json:"service_name"`
+	Operation     string             `json:"operation"`
+	SpanKind      int16              `json:"span_kind"`
+	StatusCode    int16              `json:"status_code"`
+	StatusMessage string             `json:"status_message"`
+	StartTime     pgtype.Timestamptz `json:"start_time"`
+	EndTime       pgtype.Timestamptz `json:"end_time"`
+	DurationMs    float64            `json:"duration_ms"`
+	Attributes    []byte             `json:"attributes"`
+}

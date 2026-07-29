@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -30,7 +31,7 @@ func (*failingDB) Query(context.Context, string, ...any) (pgx.Rows, error) { ret
 func (*failingDB) QueryRow(context.Context, string, ...any) pgx.Row        { return nil }
 
 func TestIngestBatchErrorContract(t *testing.T) {
-	req := &pb.Batch{AgentId: "agent", Points: []*pb.Point{{Name: "cpu"}}}
+	req := &pb.Batch{AgentId: "agent", Points: []*pb.Point{{Name: "cpu", TimestampUnixNano: time.Now().UnixNano()}}}
 
 	t.Run("insert failure is retryable", func(t *testing.T) {
 		store := &failingDB{failAt: 1}

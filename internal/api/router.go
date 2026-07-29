@@ -51,7 +51,7 @@ func InitRouter(app *fiber.App, apiSever *Server, dashboardKey string) {
 	})
 
 	// Calls Init() from v1/router.go
-	v1.Init(v1Group, apiSever.MetricsService, apiSever.AgentService, apiSever.AlertService)
+	v1.Init(v1Group, apiSever.MetricsService, apiSever.AgentService, apiSever.AlertService, apiSever.TelemetryService)
 
 	//404 Endpoint
 	app.Use(func(c fiber.Ctx) error {

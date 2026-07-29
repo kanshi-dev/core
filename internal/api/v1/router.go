@@ -11,6 +11,7 @@ func Init(
 	metricService *service.MetricsService,
 	agentService *service.AgentsService,
 	alertService *service.AlertsService,
+	telemetryService *service.TelemetryService,
 ) {
 	router.Get("/metrics", handlers.GetMetrics(metricService))
 	router.Get("/metrics/aggregate", handlers.GetAggregatedMetrics(metricService))
@@ -22,4 +23,9 @@ func Init(
 	router.Delete("/alerts/rules/:id", handlers.DeleteAlertRule(alertService))
 	router.Get("/alerts/active", handlers.GetActiveAlerts(alertService))
 	router.Get("/alerts/events", handlers.GetAlertHistory(alertService))
+
+	router.Get("/services", handlers.ListServices(telemetryService))
+	router.Get("/traces", handlers.SearchTraces(telemetryService))
+	router.Get("/traces/:traceId", handlers.GetTrace(telemetryService))
+	router.Get("/logs", handlers.SearchLogs(telemetryService))
 }
