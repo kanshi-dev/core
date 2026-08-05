@@ -10,7 +10,10 @@ import (
 	"github.com/kanshi-dev/core/internal/service"
 )
 
-const maxMetricTimeRange = time.Hour
+const (
+	maxMetricTimeRange  = 7 * 24 * time.Hour
+	maxAggregateBuckets = 1000
+)
 
 // Parse metric params
 func parseMetricParams(c fiber.Ctx) (agentID string, name string, err error) {
@@ -53,7 +56,7 @@ func parseTimeRange(c fiber.Ctx) (time.Time, time.Time, error) {
 	}
 
 	if toTime.Sub(fromTime) > maxMetricTimeRange {
-		return time.Time{}, time.Time{}, errors.New("time range exceeds 1 hour")
+		return time.Time{}, time.Time{}, errors.New("time range exceeds 7 days")
 	}
 
 	return fromTime, toTime, nil
@@ -116,6 +119,7 @@ func GetAggregatedMetrics(svc *service.MetricsService) fiber.Handler {
 			"1m":  1 * time.Minute,
 			"5m":  5 * time.Minute,
 			"15m": 15 * time.Minute,
+			"1h":  time.Hour,
 		}
 
 		//Set the default interval to 1 minute
@@ -124,7 +128,10 @@ func GetAggregatedMetrics(svc *service.MetricsService) fiber.Handler {
 		// Check if an interval is valid
 		dur, ok := allowedIntervals[intervalStr]
 		if !ok {
-			return badRequest(c, errors.New("invalid interval (allowed: 30s, 1m, 5m, 15m)"))
+			return badRequest(c, errors.New("invalid interval (allowed: 30s, 1m, 5m, 15m, 1h)"))
+		}
+		if toTime.Sub(fromTime) > time.Duration(maxAggregateBuckets)*dur {
+			return badRequest(c, errors.New("aggregate request exceeds 1000 buckets"))
 		}
 
 		// Convert interval to pgtype.Interval
