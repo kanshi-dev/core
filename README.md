@@ -19,7 +19,7 @@ REST responses use `{ "code": 200, "message": "ok", "data": ... }`.
 
 - `GET /api/v1/agents`
 - `GET /api/v1/metrics?agentId=&name=&from=&to=`
-- `GET /api/v1/metrics/aggregate?agentId=&name=&interval=`
+- `GET /api/v1/metrics/aggregate?agentId=&name=&interval=&from=&to=`
 - `GET|POST /api/v1/alerts/rules`, `PUT|DELETE /api/v1/alerts/rules/:id`
 - `GET /api/v1/alerts/active`
 - `GET /api/v1/alerts/events?limit=`
@@ -28,7 +28,7 @@ REST responses use `{ "code": 200, "message": "ok", "data": ... }`.
 - `GET /api/v1/traces/:traceId`
 - `GET /api/v1/logs?service=&traceId=&spanId=&from=&to=&limit=`
 
-Supported metrics are `cpu.used_percent`, `mem.used_percent`, and `disk.used_percent`. Aggregate intervals are `30s`, `1m`, `5m`, and `15m`. Explicit RFC3339 metric ranges may span at most one hour.
+Supported host metrics include CPU, memory, disk, and network send and receive rates. Aggregate intervals are `30s`, `1m`, `5m`, `15m`, and `1h`. Explicit RFC3339 metric ranges may span at most seven days, and aggregate requests may contain at most 1,000 buckets. The default range remains one hour and raw responses remain limited to 100 points.
 
 ## Application telemetry
 
