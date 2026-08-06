@@ -144,11 +144,19 @@ INSERT INTO metrics (
     tags
 )
 SELECT
+    metric.agent_id,
+    metric.name,
+    metric.value,
+    metric.ts,
+    ARRAY(SELECT jsonb_array_elements_text(tag_set.value))
+FROM ROWS FROM (
     unnest($1::text[]),
     unnest($2::text[]),
     unnest($3::double precision[]),
-    unnest($4::timestamptz[]),
-    $5::text[][]
+    unnest($4::timestamptz[])
+) WITH ORDINALITY AS metric(agent_id, name, value, ts, position)
+JOIN jsonb_array_elements($5::jsonb) WITH ORDINALITY AS tag_set(value, position)
+USING (position)
 `
 
 type InsertMetricsBatchParams struct {
@@ -156,7 +164,7 @@ type InsertMetricsBatchParams struct {
 	Names      []string             `json:"names"`
 	Values     []float64            `json:"values"`
 	Timestamps []pgtype.Timestamptz `json:"timestamps"`
-	Tags       [][]string           `json:"tags"`
+	Tags       []byte               `json:"tags"`
 }
 
 func (q *Queries) InsertMetricsBatch(ctx context.Context, arg InsertMetricsBatchParams) error {

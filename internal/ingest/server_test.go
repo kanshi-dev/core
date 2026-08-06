@@ -15,16 +15,34 @@ import (
 )
 
 type failingDB struct {
-	calls  int
-	failAt int
+	calls      int
+	failAt     int
+	insertArgs []any
 }
 
-func (d *failingDB) Exec(context.Context, string, ...any) (pgconn.CommandTag, error) {
+func (d *failingDB) Exec(_ context.Context, _ string, args ...any) (pgconn.CommandTag, error) {
 	d.calls++
+	if d.calls == 1 {
+		d.insertArgs = args
+	}
 	if d.calls == d.failAt {
 		return pgconn.CommandTag{}, errors.New("database unavailable")
 	}
 	return pgconn.CommandTag{}, nil
+}
+
+func TestIngestBatchEncodesMixedTags(t *testing.T) {
+	store := &failingDB{failAt: 2}
+	req := &pb.Batch{AgentId: "agent", Points: []*pb.Point{
+		{Name: "cpu", TimestampUnixNano: time.Now().UnixNano()},
+		{Name: "process.cpu_percent", TimestampUnixNano: time.Now().UnixNano(), Tags: []string{"pid=1", "process=core"}},
+	}}
+	if _, err := NewServer(db.New(store)).IngestBatch(context.Background(), req); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(store.insertArgs[4].([]byte)); got != `[[],["pid=1","process=core"]]` {
+		t.Fatalf("encoded tags = %s", got)
+	}
 }
 
 func (*failingDB) Query(context.Context, string, ...any) (pgx.Rows, error) { return nil, nil }
