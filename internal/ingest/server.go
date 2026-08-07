@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"time"
@@ -89,15 +90,19 @@ func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error
 			Valid: true,
 		}
 
-		tags[i] = p.Tags
+		tags[i] = append([]string{}, p.Tags...)
 	}
 
-	err := s.queries.InsertMetricsBatch(ctx, db.InsertMetricsBatchParams{
+	encodedTags, err := json.Marshal(tags)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to encode metric tags")
+	}
+	err = s.queries.InsertMetricsBatch(ctx, db.InsertMetricsBatchParams{
 		AgentIDS:   agentIDs,
 		Names:      names,
 		Values:     values,
 		Timestamps: timestamps,
-		Tags:       tags,
+		Tags:       encodedTags,
 	})
 	if err != nil {
 		log.Printf("failed to insert metrics batch: %v", err)

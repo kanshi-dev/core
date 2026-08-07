@@ -28,7 +28,9 @@ REST responses use `{ "code": 200, "message": "ok", "data": ... }`.
 - `GET /api/v1/traces/:traceId`
 - `GET /api/v1/logs?service=&traceId=&spanId=&from=&to=&limit=`
 
-Supported host metrics include CPU, memory, disk, and network send and receive rates. Aggregate intervals are `30s`, `1m`, `5m`, `15m`, and `1h`. Explicit RFC3339 metric ranges may span at most seven days, and aggregate requests may contain at most 1,000 buckets. The default range remains one hour and raw responses remain limited to 100 points.
+Supported host metrics include CPU, memory, disk, network send and receive rates, and optional process telemetry. Process collection uses the existing metric contract: `process.count`, `process.cpu_percent`, and `process.memory_rss_bytes` are available through `GET /api/v1/metrics`, with process samples tagged by `pid=<pid>` and `process=<normalized-name>`. Collection is disabled by default in the Agent and never includes arguments, executable paths, or environment data. No separate process endpoint or storage schema is required.
+
+Aggregate intervals are `30s`, `1m`, `5m`, `15m`, and `1h`. Explicit RFC3339 metric ranges may span at most seven days, and aggregate requests may contain at most 1,000 buckets. The default range remains one hour and raw responses remain limited to 100 points.
 
 ## Application telemetry
 

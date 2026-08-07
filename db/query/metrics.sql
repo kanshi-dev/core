@@ -7,11 +7,19 @@ INSERT INTO metrics (
     tags
 )
 SELECT
+    metric.agent_id,
+    metric.name,
+    metric.value,
+    metric.ts,
+    ARRAY(SELECT jsonb_array_elements_text(tag_set.value))
+FROM ROWS FROM (
     unnest(@agent_id_s::text[]),
     unnest(@names::text[]),
     unnest(@values::double precision[]),
-    unnest(@timestamps::timestamptz[]),
-    @tags::text[][];
+    unnest(@timestamps::timestamptz[])
+) WITH ORDINALITY AS metric(agent_id, name, value, ts, position)
+JOIN jsonb_array_elements(@tags::jsonb) WITH ORDINALITY AS tag_set(value, position)
+USING (position);
 
 
 -- name: GetMetricsByTimeRange :many
