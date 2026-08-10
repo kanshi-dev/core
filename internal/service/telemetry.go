@@ -20,6 +20,12 @@ type ServiceSummary struct {
 	ErrorRate     float64 `json:"errorRate"`
 	AvgDurationMs float64 `json:"avgDurationMs"`
 	P95DurationMs float64 `json:"p95DurationMs"`
+	Hosts         []Host  `json:"hosts"`
+}
+
+type Host struct {
+	AgentID  string `json:"agentId,omitempty"`
+	HostName string `json:"hostName"`
 }
 
 type TraceSummary struct {
@@ -46,6 +52,7 @@ type Span struct {
 	EndTime       time.Time       `json:"endTime"`
 	DurationMs    float64         `json:"durationMs"`
 	Attributes    json.RawMessage `json:"attributes"`
+	Host          *Host           `json:"host,omitempty"`
 }
 
 type LogRecord struct {
@@ -91,6 +98,10 @@ func (s *TelemetryService) ListServices(ctx context.Context, from, to time.Time,
 	}
 	out := make([]ServiceSummary, 0, len(rows))
 	for _, row := range rows {
+		hosts := []Host{}
+		if err := json.Unmarshal([]byte(row.Hosts), &hosts); err != nil {
+			return nil, err
+		}
 		errorRate := 0.0
 		if row.RequestCount > 0 {
 			errorRate = float64(row.ErrorCount) / float64(row.RequestCount)
@@ -98,6 +109,7 @@ func (s *TelemetryService) ListServices(ctx context.Context, from, to time.Time,
 		out = append(out, ServiceSummary{
 			ServiceName: row.ServiceName, RequestCount: row.RequestCount, ErrorCount: row.ErrorCount,
 			ErrorRate: errorRate, AvgDurationMs: row.AvgDurationMs, P95DurationMs: row.P95DurationMs,
+			Hosts: hosts,
 		})
 	}
 	return out, nil
@@ -136,12 +148,19 @@ func (s *TelemetryService) GetTrace(ctx context.Context, traceID string) ([]Span
 	}
 	out := make([]Span, 0, len(rows))
 	for _, row := range rows {
+		var host *Host
+		if row.HostName != "" {
+			host = &Host{HostName: row.HostName}
+			if row.HostAgentID != "" {
+				host.AgentID = row.HostAgentID
+			}
+		}
 		out = append(out, Span{
 			TraceID: row.TraceID, SpanID: row.SpanID, ParentSpanID: row.ParentSpanID,
 			ServiceName: row.ServiceName, Operation: row.Operation, StatusCode: row.StatusCode,
 			SpanKind:      row.SpanKind,
 			StatusMessage: row.StatusMessage, StartTime: row.StartTime.Time, EndTime: row.EndTime.Time,
-			DurationMs: row.DurationMs, Attributes: row.Attributes,
+			DurationMs: row.DurationMs, Attributes: row.Attributes, Host: host,
 		})
 	}
 	return out, nil

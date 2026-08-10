@@ -13,22 +13,49 @@ import (
 
 const getTraceSpans = `-- name: GetTraceSpans :many
 SELECT trace_id, span_id, parent_span_id, service_name, operation, span_kind, status_code,
-       status_message, start_time, end_time, duration_ms, attributes
+       status_message, start_time, end_time, duration_ms, attributes,
+       COALESCE(resolved.agent_id, '') AS host_agent_id,
+       COALESCE(otel_spans.resource_host_name, resolved.hostname, '') AS host_name
 FROM otel_spans
+LEFT JOIN LATERAL (
+    SELECT agents.agent_id, agents.hostname
+    FROM agents
+    WHERE agents.agent_id = otel_spans.resource_agent_id
+       OR agents.hostname = otel_spans.resource_host_name
+    ORDER BY (agents.agent_id = otel_spans.resource_agent_id) DESC, agents.last_seen DESC
+    LIMIT 1
+) resolved ON TRUE
 WHERE trace_id = $1
 ORDER BY start_time, span_id
 LIMIT 1000
 `
 
-func (q *Queries) GetTraceSpans(ctx context.Context, traceID string) ([]OtelSpan, error) {
+type GetTraceSpansRow struct {
+	TraceID       string             `json:"trace_id"`
+	SpanID        string             `json:"span_id"`
+	ParentSpanID  string             `json:"parent_span_id"`
+	ServiceName   string             `json:"service_name"`
+	Operation     string             `json:"operation"`
+	SpanKind      int16              `json:"span_kind"`
+	StatusCode    int16              `json:"status_code"`
+	StatusMessage string             `json:"status_message"`
+	StartTime     pgtype.Timestamptz `json:"start_time"`
+	EndTime       pgtype.Timestamptz `json:"end_time"`
+	DurationMs    float64            `json:"duration_ms"`
+	Attributes    []byte             `json:"attributes"`
+	HostAgentID   string             `json:"host_agent_id"`
+	HostName      string             `json:"host_name"`
+}
+
+func (q *Queries) GetTraceSpans(ctx context.Context, traceID string) ([]GetTraceSpansRow, error) {
 	rows, err := q.db.Query(ctx, getTraceSpans, traceID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []OtelSpan
+	var items []GetTraceSpansRow
 	for rows.Next() {
-		var i OtelSpan
+		var i GetTraceSpansRow
 		if err := rows.Scan(
 			&i.TraceID,
 			&i.SpanID,
@@ -42,6 +69,8 @@ func (q *Queries) GetTraceSpans(ctx context.Context, traceID string) ([]OtelSpan
 			&i.EndTime,
 			&i.DurationMs,
 			&i.Attributes,
+			&i.HostAgentID,
+			&i.HostName,
 		); err != nil {
 			return nil, err
 		}
@@ -84,24 +113,27 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 const insertSpan = `-- name: InsertSpan :exec
 INSERT INTO otel_spans (
     trace_id, span_id, parent_span_id, service_name, operation, span_kind, status_code,
-    status_message, start_time, end_time, duration_ms, attributes
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    status_message, start_time, end_time, duration_ms, attributes, resource_agent_id,
+    resource_host_name
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 ON CONFLICT DO NOTHING
 `
 
 type InsertSpanParams struct {
-	TraceID       string             `json:"trace_id"`
-	SpanID        string             `json:"span_id"`
-	ParentSpanID  string             `json:"parent_span_id"`
-	ServiceName   string             `json:"service_name"`
-	Operation     string             `json:"operation"`
-	SpanKind      int16              `json:"span_kind"`
-	StatusCode    int16              `json:"status_code"`
-	StatusMessage string             `json:"status_message"`
-	StartTime     pgtype.Timestamptz `json:"start_time"`
-	EndTime       pgtype.Timestamptz `json:"end_time"`
-	DurationMs    float64            `json:"duration_ms"`
-	Attributes    []byte             `json:"attributes"`
+	TraceID          string             `json:"trace_id"`
+	SpanID           string             `json:"span_id"`
+	ParentSpanID     string             `json:"parent_span_id"`
+	ServiceName      string             `json:"service_name"`
+	Operation        string             `json:"operation"`
+	SpanKind         int16              `json:"span_kind"`
+	StatusCode       int16              `json:"status_code"`
+	StatusMessage    string             `json:"status_message"`
+	StartTime        pgtype.Timestamptz `json:"start_time"`
+	EndTime          pgtype.Timestamptz `json:"end_time"`
+	DurationMs       float64            `json:"duration_ms"`
+	Attributes       []byte             `json:"attributes"`
+	ResourceAgentID  pgtype.Text        `json:"resource_agent_id"`
+	ResourceHostName pgtype.Text        `json:"resource_host_name"`
 }
 
 func (q *Queries) InsertSpan(ctx context.Context, arg InsertSpanParams) error {
@@ -118,6 +150,8 @@ func (q *Queries) InsertSpan(ctx context.Context, arg InsertSpanParams) error {
 		arg.EndTime,
 		arg.DurationMs,
 		arg.Attributes,
+		arg.ResourceAgentID,
+		arg.ResourceHostName,
 	)
 	return err
 }
@@ -128,8 +162,31 @@ SELECT
     COUNT(*)::BIGINT AS request_count,
     COUNT(*) FILTER (WHERE status_code = 2)::BIGINT AS error_count,
     COALESCE(AVG(duration_ms), 0)::DOUBLE PRECISION AS avg_duration_ms,
-    COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY duration_ms), 0)::DOUBLE PRECISION AS p95_duration_ms
-FROM otel_spans
+    COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY duration_ms), 0)::DOUBLE PRECISION AS p95_duration_ms,
+    COALESCE((
+        SELECT jsonb_agg(jsonb_build_object('agentId', host.agent_id, 'hostName', host.host_name)
+                         ORDER BY host.host_name, host.agent_id)
+        FROM (
+            SELECT DISTINCT resolved.agent_id,
+                   COALESCE(identity_span.resource_host_name, resolved.hostname) AS host_name
+            FROM otel_spans identity_span
+            LEFT JOIN LATERAL (
+                SELECT agents.agent_id, agents.hostname
+                FROM agents
+                WHERE agents.agent_id = identity_span.resource_agent_id
+                   OR agents.hostname = identity_span.resource_host_name
+                ORDER BY (agents.agent_id = identity_span.resource_agent_id) DESC, agents.last_seen DESC
+                LIMIT 1
+            ) resolved ON TRUE
+            WHERE identity_span.service_name = summary_span.service_name
+              AND identity_span.start_time >= $1
+              AND identity_span.start_time <= $2
+              AND (identity_span.resource_host_name IS NOT NULL OR resolved.agent_id IS NOT NULL)
+            ORDER BY host_name, resolved.agent_id
+            LIMIT 20
+        ) host
+    ), '[]'::jsonb)::TEXT AS hosts
+FROM otel_spans summary_span
 WHERE (span_kind = 2 OR parent_span_id = '')
   AND start_time >= $1
   AND start_time <= $2
@@ -150,6 +207,7 @@ type ListServiceSummariesRow struct {
 	ErrorCount    int64   `json:"error_count"`
 	AvgDurationMs float64 `json:"avg_duration_ms"`
 	P95DurationMs float64 `json:"p95_duration_ms"`
+	Hosts         string  `json:"hosts"`
 }
 
 func (q *Queries) ListServiceSummaries(ctx context.Context, arg ListServiceSummariesParams) ([]ListServiceSummariesRow, error) {
@@ -167,6 +225,7 @@ func (q *Queries) ListServiceSummaries(ctx context.Context, arg ListServiceSumma
 			&i.ErrorCount,
 			&i.AvgDurationMs,
 			&i.P95DurationMs,
+			&i.Hosts,
 		); err != nil {
 			return nil, err
 		}

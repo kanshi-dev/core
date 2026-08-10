@@ -63,16 +63,18 @@ type OtelLog struct {
 }
 
 type OtelSpan struct {
-	TraceID       string             `json:"trace_id"`
-	SpanID        string             `json:"span_id"`
-	ParentSpanID  string             `json:"parent_span_id"`
-	ServiceName   string             `json:"service_name"`
-	Operation     string             `json:"operation"`
-	SpanKind      int16              `json:"span_kind"`
-	StatusCode    int16              `json:"status_code"`
-	StatusMessage string             `json:"status_message"`
-	StartTime     pgtype.Timestamptz `json:"start_time"`
-	EndTime       pgtype.Timestamptz `json:"end_time"`
-	DurationMs    float64            `json:"duration_ms"`
-	Attributes    []byte             `json:"attributes"`
+	TraceID          string             `json:"trace_id"`
+	SpanID           string             `json:"span_id"`
+	ParentSpanID     string             `json:"parent_span_id"`
+	ServiceName      string             `json:"service_name"`
+	Operation        string             `json:"operation"`
+	SpanKind         int16              `json:"span_kind"`
+	StatusCode       int16              `json:"status_code"`
+	StatusMessage    string             `json:"status_message"`
+	StartTime        pgtype.Timestamptz `json:"start_time"`
+	EndTime          pgtype.Timestamptz `json:"end_time"`
+	DurationMs       float64            `json:"duration_ms"`
+	Attributes       []byte             `json:"attributes"`
+	ResourceAgentID  pgtype.Text        `json:"resource_agent_id"`
+	ResourceHostName pgtype.Text        `json:"resource_host_name"`
 }

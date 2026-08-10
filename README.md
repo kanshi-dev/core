@@ -45,6 +45,8 @@ Ingestion is bounded to a 4 MiB gRPC message, 1,000 spans or log records per req
 
 Sample production traces. Parent-based `traceidratio` sampling at `0.1` is a reasonable starting point; adjust from measured volume. Avoid unsampled high-volume debug logs, redact secrets before export, and never attach credentials or request bodies as attributes.
 
+To link application telemetry to a monitored host, set the standard `host.name` OTLP resource attribute and, when available, `kanshi.agent.id`. Core stores only those two resource identity fields, prefers an exact Agent ID match, and falls back to the most recently seen Agent with the same hostname. Service summaries expose at most 20 reported hosts, and trace spans include an optional resolved host. Unresolved hostnames remain visible. These advisory links are not an authorization boundary because a holder of the shared ingest key can claim either identity.
+
 ## Alerting
 
 Core evaluates persisted alert rules on a fixed schedule and records firing and resolved transitions. A rule targets `cpu.used_percent`, `mem.used_percent`, `disk.used_percent`, or `agent.offline`, globally or for a single agent, and stays disabled until enabled. State lives in the `alert_events` table and survives a restart, so a sustained breach fires once and recovery resolves once. Each transition is delivered to every configured webhook with an optional HMAC-SHA256 signature and bounded retries.
