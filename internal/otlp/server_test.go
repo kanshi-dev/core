@@ -34,8 +34,11 @@ func TestTraceAndLogValidation(t *testing.T) {
 	server.now = func() time.Time { return now }
 
 	traceRequest := validTraceRequest(now)
+	traceRequest.ResourceSpans[0].Resource.Attributes = append(traceRequest.ResourceSpans[0].Resource.Attributes,
+		stringAttribute("kanshi.agent.id", "agent-1"), stringAttribute("host.name", "checkout-1"))
 	spans, err := server.parseSpans(traceRequest)
-	if err != nil || len(spans) != 1 || spans[0].ServiceName != "checkout" {
+	if err != nil || len(spans) != 1 || spans[0].ServiceName != "checkout" ||
+		spans[0].ResourceAgentID.String != "agent-1" || spans[0].ResourceHostName.String != "checkout-1" {
 		t.Fatalf("valid trace: spans=%v err=%v", spans, err)
 	}
 
@@ -50,6 +53,13 @@ func TestTraceAndLogValidation(t *testing.T) {
 	}}
 	if _, err := server.parseSpans(traceRequest); err == nil {
 		t.Fatal("expected non-finite attribute to fail")
+	}
+
+	traceRequest = validTraceRequest(now)
+	traceRequest.ResourceSpans[0].Resource.Attributes = append(traceRequest.ResourceSpans[0].Resource.Attributes,
+		stringAttribute("host.name", ""))
+	if _, err := server.parseSpans(traceRequest); err == nil {
+		t.Fatal("expected empty host identity to fail")
 	}
 
 	logRequest.ResourceLogs[0].ScopeLogs[0].LogRecords[0].TimeUnixNano = uint64(now.Add(-4 * 24 * time.Hour).UnixNano())
@@ -96,7 +106,9 @@ func validID(size int) []byte {
 }
 
 func serviceResource() *resourcev1.Resource {
-	return &resourcev1.Resource{Attributes: []*commonv1.KeyValue{{
-		Key: "service.name", Value: &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: "checkout"}},
-	}}}
+	return &resourcev1.Resource{Attributes: []*commonv1.KeyValue{stringAttribute("service.name", "checkout")}}
+}
+
+func stringAttribute(key, value string) *commonv1.KeyValue {
+	return &commonv1.KeyValue{Key: key, Value: &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: value}}}
 }

@@ -99,6 +99,10 @@ func (s *Server) parseSpans(req *collectortracev1.ExportTraceServiceRequest) ([]
 		if err != nil {
 			return nil, err
 		}
+		agentID, hostName, err := resourceHost(resourceSpans.GetResource())
+		if err != nil {
+			return nil, err
+		}
 		for _, scopeSpans := range resourceSpans.GetScopeSpans() {
 			for _, span := range scopeSpans.GetSpans() {
 				if len(out) == MaxBatchRecords {
@@ -108,6 +112,7 @@ func (s *Server) parseSpans(req *collectortracev1.ExportTraceServiceRequest) ([]
 				if err != nil {
 					return nil, err
 				}
+				parsed.ResourceAgentID, parsed.ResourceHostName = agentID, hostName
 				out = append(out, parsed)
 			}
 		}
@@ -248,6 +253,25 @@ func serviceName(resource *resourcev1.Resource) (string, error) {
 		}
 	}
 	return "", errors.New("resource requires service.name of 1 to 255 bytes")
+}
+
+func resourceHost(resource *resourcev1.Resource) (pgtype.Text, pgtype.Text, error) {
+	var agentID, hostName pgtype.Text
+	for _, attribute := range resource.GetAttributes() {
+		if attribute.GetKey() != "kanshi.agent.id" && attribute.GetKey() != "host.name" {
+			continue
+		}
+		value, ok := attribute.GetValue().GetValue().(*commonv1.AnyValue_StringValue)
+		if !ok || value.StringValue == "" || len(value.StringValue) > 255 {
+			return pgtype.Text{}, pgtype.Text{}, fmt.Errorf("resource attribute %s must be a string of 1 to 255 bytes", attribute.GetKey())
+		}
+		if attribute.GetKey() == "kanshi.agent.id" {
+			agentID = pgtype.Text{String: value.StringValue, Valid: true}
+		} else {
+			hostName = pgtype.Text{String: value.StringValue, Valid: true}
+		}
+	}
+	return agentID, hostName, nil
 }
 
 func timestamp(nanos uint64, now time.Time, retention time.Duration) (time.Time, error) {

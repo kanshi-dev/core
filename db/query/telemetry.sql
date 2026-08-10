@@ -1,8 +1,9 @@
 -- name: InsertSpan :exec
 INSERT INTO otel_spans (
     trace_id, span_id, parent_span_id, service_name, operation, span_kind, status_code,
-    status_message, start_time, end_time, duration_ms, attributes
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    status_message, start_time, end_time, duration_ms, attributes, resource_agent_id,
+    resource_host_name
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 ON CONFLICT DO NOTHING;
 
 -- name: InsertLog :exec

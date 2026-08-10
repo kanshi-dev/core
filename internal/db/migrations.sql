@@ -65,8 +65,13 @@ CREATE TABLE IF NOT EXISTS otel_spans (
     end_time TIMESTAMPTZ NOT NULL,
     duration_ms DOUBLE PRECISION NOT NULL,
     attributes JSONB NOT NULL DEFAULT '{}'::jsonb,
+    resource_agent_id TEXT,
+    resource_host_name TEXT,
     PRIMARY KEY (trace_id, span_id, start_time)
 );
+
+ALTER TABLE otel_spans ADD COLUMN IF NOT EXISTS resource_agent_id TEXT;
+ALTER TABLE otel_spans ADD COLUMN IF NOT EXISTS resource_host_name TEXT;
 
 SELECT create_hypertable('otel_spans', 'start_time', if_not_exists => TRUE);
 CREATE INDEX IF NOT EXISTS idx_otel_spans_service_time ON otel_spans (service_name, start_time DESC);

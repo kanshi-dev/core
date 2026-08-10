@@ -20,15 +20,30 @@ ORDER BY start_time, span_id
 LIMIT 1000
 `
 
-func (q *Queries) GetTraceSpans(ctx context.Context, traceID string) ([]OtelSpan, error) {
+type GetTraceSpansRow struct {
+	TraceID       string             `json:"trace_id"`
+	SpanID        string             `json:"span_id"`
+	ParentSpanID  string             `json:"parent_span_id"`
+	ServiceName   string             `json:"service_name"`
+	Operation     string             `json:"operation"`
+	SpanKind      int16              `json:"span_kind"`
+	StatusCode    int16              `json:"status_code"`
+	StatusMessage string             `json:"status_message"`
+	StartTime     pgtype.Timestamptz `json:"start_time"`
+	EndTime       pgtype.Timestamptz `json:"end_time"`
+	DurationMs    float64            `json:"duration_ms"`
+	Attributes    []byte             `json:"attributes"`
+}
+
+func (q *Queries) GetTraceSpans(ctx context.Context, traceID string) ([]GetTraceSpansRow, error) {
 	rows, err := q.db.Query(ctx, getTraceSpans, traceID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []OtelSpan
+	var items []GetTraceSpansRow
 	for rows.Next() {
-		var i OtelSpan
+		var i GetTraceSpansRow
 		if err := rows.Scan(
 			&i.TraceID,
 			&i.SpanID,
@@ -84,24 +99,27 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 const insertSpan = `-- name: InsertSpan :exec
 INSERT INTO otel_spans (
     trace_id, span_id, parent_span_id, service_name, operation, span_kind, status_code,
-    status_message, start_time, end_time, duration_ms, attributes
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    status_message, start_time, end_time, duration_ms, attributes, resource_agent_id,
+    resource_host_name
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 ON CONFLICT DO NOTHING
 `
 
 type InsertSpanParams struct {
-	TraceID       string             `json:"trace_id"`
-	SpanID        string             `json:"span_id"`
-	ParentSpanID  string             `json:"parent_span_id"`
-	ServiceName   string             `json:"service_name"`
-	Operation     string             `json:"operation"`
-	SpanKind      int16              `json:"span_kind"`
-	StatusCode    int16              `json:"status_code"`
-	StatusMessage string             `json:"status_message"`
-	StartTime     pgtype.Timestamptz `json:"start_time"`
-	EndTime       pgtype.Timestamptz `json:"end_time"`
-	DurationMs    float64            `json:"duration_ms"`
-	Attributes    []byte             `json:"attributes"`
+	TraceID          string             `json:"trace_id"`
+	SpanID           string             `json:"span_id"`
+	ParentSpanID     string             `json:"parent_span_id"`
+	ServiceName      string             `json:"service_name"`
+	Operation        string             `json:"operation"`
+	SpanKind         int16              `json:"span_kind"`
+	StatusCode       int16              `json:"status_code"`
+	StatusMessage    string             `json:"status_message"`
+	StartTime        pgtype.Timestamptz `json:"start_time"`
+	EndTime          pgtype.Timestamptz `json:"end_time"`
+	DurationMs       float64            `json:"duration_ms"`
+	Attributes       []byte             `json:"attributes"`
+	ResourceAgentID  pgtype.Text        `json:"resource_agent_id"`
+	ResourceHostName pgtype.Text        `json:"resource_host_name"`
 }
 
 func (q *Queries) InsertSpan(ctx context.Context, arg InsertSpanParams) error {
@@ -118,6 +136,8 @@ func (q *Queries) InsertSpan(ctx context.Context, arg InsertSpanParams) error {
 		arg.EndTime,
 		arg.DurationMs,
 		arg.Attributes,
+		arg.ResourceAgentID,
+		arg.ResourceHostName,
 	)
 	return err
 }
