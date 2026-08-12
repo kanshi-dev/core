@@ -98,7 +98,7 @@ func (d *Dispatcher) Deliver(ctx context.Context, r db.AlertRule, ev db.AlertEve
 func (d *Dispatcher) deliverOne(ctx context.Context, url string, body []byte, sig string) error {
 	attempts := len(d.backoff) + 1
 	var lastErr error
-	for attempt := 0; attempt < attempts; attempt++ {
+	for attempt := range attempts {
 		if attempt > 0 {
 			select {
 			case <-ctx.Done():

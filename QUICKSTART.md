@@ -1,6 +1,6 @@
 # Kanshi quickstart
 
-The current stable release uses Core, Agent, and Dashboard `v1.3.0`.
+The current stable release uses Core, Agent, and Dashboard `v1.3.1`.
 
 ## Start locally
 
@@ -16,7 +16,7 @@ make up
 
 ```sh
 curl -fsSL https://kanshi.dev/install.sh |
-  KANSHI_VERSION=v1.3.0 sh
+  KANSHI_VERSION=v1.3.1 sh
 
 eval "$(KANSHI_CORE_ADDR=your-server:50051 make agent-env)"
 kanshi-agent
@@ -26,7 +26,7 @@ For systemd Linux:
 
 ```sh
 curl -fsSL https://kanshi.dev/install.sh |
-  sudo KANSHI_VERSION=v1.3.0 \
+  sudo KANSHI_VERSION=v1.3.1 \
   KANSHI_CORE_ADDR=your-server:50051 \
   KANSHI_API_KEY=the-ingest-key-from-.env \
   sh -s -- --systemd
@@ -41,7 +41,7 @@ curl -H "Authorization: Bearer $dashboard_key" \
   http://localhost:8080/api/v1/agents
 ```
 
-Metric queries default to the latest hour. Explicit `from` and `to` values must be RFC3339 and span no more than seven days.
+Metric queries default to the latest hour. Explicit `from` and `to` values must be RFC3339 and span no more than 168 hours.
 
 ## Troubleshooting
 
