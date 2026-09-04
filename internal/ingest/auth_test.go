@@ -16,6 +16,7 @@ func TestAPIKeyAuth(t *testing.T) {
 	methods := []string{
 		pb.IngestService_ReportAgent_FullMethodName,
 		pb.IngestService_IngestBatch_FullMethodName,
+		pb.IngestService_UploadProfile_FullMethodName,
 	}
 
 	for _, method := range methods {

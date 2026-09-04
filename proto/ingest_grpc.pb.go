@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IngestService_IngestBatch_FullMethodName = "/kanshi.ingest.v1.IngestService/IngestBatch"
-	IngestService_ReportAgent_FullMethodName = "/kanshi.ingest.v1.IngestService/ReportAgent"
+	IngestService_IngestBatch_FullMethodName   = "/kanshi.ingest.v1.IngestService/IngestBatch"
+	IngestService_ReportAgent_FullMethodName   = "/kanshi.ingest.v1.IngestService/ReportAgent"
+	IngestService_UploadProfile_FullMethodName = "/kanshi.ingest.v1.IngestService/UploadProfile"
 )
 
 // IngestServiceClient is the client API for IngestService service.
@@ -29,6 +30,7 @@ const (
 type IngestServiceClient interface {
 	IngestBatch(ctx context.Context, in *Batch, opts ...grpc.CallOption) (*Ack, error)
 	ReportAgent(ctx context.Context, in *AgentReport, opts ...grpc.CallOption) (*Ack, error)
+	UploadProfile(ctx context.Context, in *ProfileUpload, opts ...grpc.CallOption) (*Ack, error)
 }
 
 type ingestServiceClient struct {
@@ -59,12 +61,23 @@ func (c *ingestServiceClient) ReportAgent(ctx context.Context, in *AgentReport, 
 	return out, nil
 }
 
+func (c *ingestServiceClient) UploadProfile(ctx context.Context, in *ProfileUpload, opts ...grpc.CallOption) (*Ack, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Ack)
+	err := c.cc.Invoke(ctx, IngestService_UploadProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IngestServiceServer is the server API for IngestService service.
 // All implementations must embed UnimplementedIngestServiceServer
 // for forward compatibility.
 type IngestServiceServer interface {
 	IngestBatch(context.Context, *Batch) (*Ack, error)
 	ReportAgent(context.Context, *AgentReport) (*Ack, error)
+	UploadProfile(context.Context, *ProfileUpload) (*Ack, error)
 	mustEmbedUnimplementedIngestServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedIngestServiceServer) IngestBatch(context.Context, *Batch) (*A
 }
 func (UnimplementedIngestServiceServer) ReportAgent(context.Context, *AgentReport) (*Ack, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReportAgent not implemented")
+}
+func (UnimplementedIngestServiceServer) UploadProfile(context.Context, *ProfileUpload) (*Ack, error) {
+	return nil, status.Error(codes.Unimplemented, "method UploadProfile not implemented")
 }
 func (UnimplementedIngestServiceServer) mustEmbedUnimplementedIngestServiceServer() {}
 func (UnimplementedIngestServiceServer) testEmbeddedByValue()                       {}
@@ -138,6 +154,24 @@ func _IngestService_ReportAgent_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IngestService_UploadProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProfileUpload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IngestServiceServer).UploadProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IngestService_UploadProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IngestServiceServer).UploadProfile(ctx, req.(*ProfileUpload))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IngestService_ServiceDesc is the grpc.ServiceDesc for IngestService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var IngestService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReportAgent",
 			Handler:    _IngestService_ReportAgent_Handler,
+		},
+		{
+			MethodName: "UploadProfile",
+			Handler:    _IngestService_UploadProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

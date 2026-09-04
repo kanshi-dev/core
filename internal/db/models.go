@@ -9,16 +9,17 @@ import (
 )
 
 type Agent struct {
-	AgentID     string             `json:"agent_id"`
-	Hostname    string             `json:"hostname"`
-	Os          string             `json:"os"`
-	Platform    string             `json:"platform"`
-	Arch        string             `json:"arch"`
-	CpuCores    int32              `json:"cpu_cores"`
-	TotalMemory int64              `json:"total_memory"`
-	DiskSize    int64              `json:"disk_size"`
-	Version     string             `json:"version"`
-	LastSeen    pgtype.Timestamptz `json:"last_seen"`
+	AgentID        string             `json:"agent_id"`
+	Hostname       string             `json:"hostname"`
+	Os             string             `json:"os"`
+	Platform       string             `json:"platform"`
+	Arch           string             `json:"arch"`
+	CpuCores       int32              `json:"cpu_cores"`
+	TotalMemory    int64              `json:"total_memory"`
+	DiskSize       int64              `json:"disk_size"`
+	Version        string             `json:"version"`
+	ProfileTargets []byte             `json:"profile_targets"`
+	LastSeen       pgtype.Timestamptz `json:"last_seen"`
 }
 
 type AlertEvent struct {
@@ -77,4 +78,20 @@ type OtelSpan struct {
 	Attributes       []byte             `json:"attributes"`
 	ResourceAgentID  pgtype.Text        `json:"resource_agent_id"`
 	ResourceHostName pgtype.Text        `json:"resource_host_name"`
+}
+
+type ProfileCapture struct {
+	ID              string             `json:"id"`
+	AgentID         string             `json:"agent_id"`
+	TargetName      string             `json:"target_name"`
+	ProfileType     string             `json:"profile_type"`
+	DurationSeconds int16              `json:"duration_seconds"`
+	State           string             `json:"state"`
+	Error           pgtype.Text        `json:"error"`
+	Filename        pgtype.Text        `json:"filename"`
+	ContentType     pgtype.Text        `json:"content_type"`
+	Artifact        []byte             `json:"artifact"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ExpiresAt       pgtype.Timestamptz `json:"expires_at"`
 }

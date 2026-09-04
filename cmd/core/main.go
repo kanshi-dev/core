@@ -67,7 +67,7 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(ingest.APIKeyAuth(apiKey)),
-		grpc.MaxRecvMsgSize(4<<20),
+		grpc.MaxRecvMsgSize(12<<20),
 	)
 	pb.RegisterIngestServiceServer(grpcServer, ingest.NewServer(queries))
 	otlpServer := otlp.NewServer(queries, traceRetention, logRetention)
@@ -86,6 +86,7 @@ func main() {
 	metricsService := service.NewMetricsService(queries)
 	alertService := service.NewAlertsService(queries)
 	telemetryService := service.NewTelemetryService(queries)
+	profilesService := service.NewProfilesService(queries)
 
 	// Start alert evaluation and webhook delivery when a database is available.
 	if queries != nil {
@@ -95,7 +96,7 @@ func main() {
 	}
 
 	// Init Api
-	apiServer := api.NewServer(agentService, metricsService, alertService, telemetryService, ping, dashboardKey, os.Getenv("KANSHI_ALLOWED_ORIGINS"))
+	apiServer := api.NewServer(agentService, metricsService, alertService, telemetryService, profilesService, ping, dashboardKey, os.Getenv("KANSHI_ALLOWED_ORIGINS"))
 
 	if err := apiServer.App.Listen(":8080"); err != nil {
 		log.Fatal(err)

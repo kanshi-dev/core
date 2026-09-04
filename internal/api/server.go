@@ -15,10 +15,11 @@ type Server struct {
 	AgentService     *service.AgentsService
 	AlertService     *service.AlertsService
 	TelemetryService *service.TelemetryService
+	ProfilesService  *service.ProfilesService
 	ping             func(context.Context) error
 }
 
-func NewServer(agentService *service.AgentsService, metricsService *service.MetricsService, alertService *service.AlertsService, telemetryService *service.TelemetryService, ping func(context.Context) error, dashboardKey, allowedOrigins string) *Server {
+func NewServer(agentService *service.AgentsService, metricsService *service.MetricsService, alertService *service.AlertsService, telemetryService *service.TelemetryService, profilesService *service.ProfilesService, ping func(context.Context) error, dashboardKey, allowedOrigins string) *Server {
 	app := fiber.New()
 	if allowedOrigins == "" {
 		allowedOrigins = "http://localhost:5173,http://127.0.0.1:5173"
@@ -34,6 +35,7 @@ func NewServer(agentService *service.AgentsService, metricsService *service.Metr
 		AgentService:     agentService,
 		AlertService:     alertService,
 		TelemetryService: telemetryService,
+		ProfilesService:  profilesService,
 		ping:             ping,
 	}
 

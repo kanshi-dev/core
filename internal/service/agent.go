@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -11,17 +12,23 @@ import (
 var ErrNoDatabase = errors.New("database connection not established")
 
 type AgentStatus struct {
-	AgentID     string    `json:"agentId"`
-	HostName    string    `json:"hostName"`
-	Os          string    `json:"os"`
-	Platform    string    `json:"platform"`
-	Arch        string    `json:"arch"`
-	CpuCores    int32     `json:"cpuCores"`
-	TotalMemory int64     `json:"totalMemory"`
-	Version     string    `json:"version"`
-	LastSeen    time.Time `json:"lastSeen"`
-	Status      string    `json:"status"`
-	DiskSize    int64     `json:"diskSize"`
+	AgentID        string          `json:"agentId"`
+	HostName       string          `json:"hostName"`
+	Os             string          `json:"os"`
+	Platform       string          `json:"platform"`
+	Arch           string          `json:"arch"`
+	CpuCores       int32           `json:"cpuCores"`
+	TotalMemory    int64           `json:"totalMemory"`
+	Version        string          `json:"version"`
+	LastSeen       time.Time       `json:"lastSeen"`
+	Status         string          `json:"status"`
+	DiskSize       int64           `json:"diskSize"`
+	ProfileTargets []ProfileTarget `json:"profileTargets"`
+}
+
+type ProfileTarget struct {
+	Name       string `json:"name"`
+	Discovered bool   `json:"discovered"`
 }
 
 type AgentsService struct {
@@ -51,6 +58,10 @@ func (s *AgentsService) ListAgentsWithStatus(
 	var result []AgentStatus
 
 	for _, a := range rows {
+		var profileTargets []ProfileTarget
+		if err := json.Unmarshal([]byte(a.ProfileTargets), &profileTargets); err != nil {
+			return nil, err
+		}
 
 		status := "offline"
 		if now.Sub(a.LastSeen.Time) <= offlineThreshold {
@@ -58,17 +69,18 @@ func (s *AgentsService) ListAgentsWithStatus(
 		}
 
 		result = append(result, AgentStatus{
-			AgentID:     a.AgentId,
-			HostName:    a.HostName,
-			Os:          a.Os,
-			Platform:    a.Platform,
-			Arch:        a.Arch,
-			CpuCores:    a.CpuCores,
-			TotalMemory: a.TotalMemory,
-			Version:     a.Version,
-			LastSeen:    a.LastSeen.Time,
-			Status:      status,
-			DiskSize:    a.DiskSize,
+			AgentID:        a.AgentId,
+			HostName:       a.HostName,
+			Os:             a.Os,
+			Platform:       a.Platform,
+			Arch:           a.Arch,
+			CpuCores:       a.CpuCores,
+			TotalMemory:    a.TotalMemory,
+			Version:        a.Version,
+			LastSeen:       a.LastSeen.Time,
+			Status:         status,
+			DiskSize:       a.DiskSize,
+			ProfileTargets: profileTargets,
 		})
 	}
 

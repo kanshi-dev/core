@@ -46,7 +46,11 @@ func TestIngestBatchEncodesMixedTags(t *testing.T) {
 }
 
 func (*failingDB) Query(context.Context, string, ...any) (pgx.Rows, error) { return nil, nil }
-func (*failingDB) QueryRow(context.Context, string, ...any) pgx.Row        { return nil }
+func (*failingDB) QueryRow(context.Context, string, ...any) pgx.Row        { return errorRow{} }
+
+type errorRow struct{}
+
+func (errorRow) Scan(...any) error { return pgx.ErrNoRows }
 
 func TestIngestBatchErrorContract(t *testing.T) {
 	req := &pb.Batch{AgentId: "agent", Points: []*pb.Point{{Name: "cpu", TimestampUnixNano: time.Now().UnixNano()}}}
