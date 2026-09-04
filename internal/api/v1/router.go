@@ -13,6 +13,7 @@ func Init(
 	alertService *service.AlertsService,
 	telemetryService *service.TelemetryService,
 	profilesService *service.ProfilesService,
+	traceViewer *service.TraceViewerService,
 ) {
 	router.Get("/metrics", handlers.GetMetrics(metricService))
 	router.Get("/metrics/aggregate", handlers.GetAggregatedMetrics(metricService))
@@ -22,6 +23,9 @@ func Init(
 	router.Get("/profiles/:id", handlers.GetProfile(profilesService))
 	router.Get("/profiles/:id/flamegraph", handlers.GetProfileFlamegraph(profilesService))
 	router.Get("/profiles/:id/download", handlers.DownloadProfile(profilesService))
+	router.Get("/profiles/:id/trace", handlers.TraceViewer(traceViewer))
+	router.Get("/profiles/:id/trace/*", handlers.TraceViewer(traceViewer))
+	router.Post("/profiles/:id/trace/session", handlers.CreateTraceViewerSession(traceViewer))
 
 	router.Get("/alerts/rules", handlers.ListAlertRules(alertService))
 	router.Post("/alerts/rules", handlers.CreateAlertRule(alertService))

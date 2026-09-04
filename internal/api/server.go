@@ -16,6 +16,7 @@ type Server struct {
 	AlertService     *service.AlertsService
 	TelemetryService *service.TelemetryService
 	ProfilesService  *service.ProfilesService
+	TraceViewer      *service.TraceViewerService
 	ping             func(context.Context) error
 }
 
@@ -28,7 +29,7 @@ func NewServer(agentService *service.AgentsService, metricsService *service.Metr
 	for i := range origins {
 		origins[i] = strings.TrimSpace(origins[i])
 	}
-	app.Use(cors.New(cors.Config{AllowOrigins: origins, AllowHeaders: []string{"Authorization", "Content-Type"}}))
+	app.Use(cors.New(cors.Config{AllowOrigins: origins, AllowHeaders: []string{"Authorization", "Content-Type"}, AllowCredentials: true}))
 	server := &Server{
 		App:              app,
 		MetricsService:   metricsService,
@@ -36,6 +37,7 @@ func NewServer(agentService *service.AgentsService, metricsService *service.Metr
 		AlertService:     alertService,
 		TelemetryService: telemetryService,
 		ProfilesService:  profilesService,
+		TraceViewer:      service.NewTraceViewerService(profilesService),
 		ping:             ping,
 	}
 

@@ -4,6 +4,7 @@ WORKDIR /app
 COPY . .
 
 RUN go build -o kanshi-core cmd/core/main.go
+RUN go build -o kanshi-trace-viewer cmd/trace
 
 
 FROM alpine:latest
@@ -11,6 +12,7 @@ FROM alpine:latest
 WORKDIR /app
 RUN addgroup -S kanshi && adduser -S -G kanshi kanshi
 COPY --from=builder /app/kanshi-core .
+COPY --from=builder /app/kanshi-trace-viewer .
 USER kanshi
 
 EXPOSE 50051
