@@ -52,6 +52,16 @@ func GetProfile(svc *service.ProfilesService) fiber.Handler {
 	}
 }
 
+func GetProfileFlamegraph(svc *service.ProfilesService) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		graph, err := svc.Flamegraph(c.Context(), c.Params("id"), c.Query("sampleType"))
+		if err != nil {
+			return profileError(c, err)
+		}
+		return response.CustomResponse(c, fiber.StatusOK, "success", graph)
+	}
+}
+
 func DownloadProfile(svc *service.ProfilesService) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		artifact, err := svc.Download(c.Context(), c.Params("id"))

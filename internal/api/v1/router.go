@@ -20,6 +20,7 @@ func Init(
 	router.Post("/agents/:agentId/profiles", handlers.CreateProfile(profilesService))
 	router.Get("/agents/:agentId/profiles", handlers.ListProfiles(profilesService))
 	router.Get("/profiles/:id", handlers.GetProfile(profilesService))
+	router.Get("/profiles/:id/flamegraph", handlers.GetProfileFlamegraph(profilesService))
 	router.Get("/profiles/:id/download", handlers.DownloadProfile(profilesService))
 
 	router.Get("/alerts/rules", handlers.ListAlertRules(alertService))

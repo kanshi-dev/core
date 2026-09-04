@@ -4,6 +4,7 @@ go 1.25.5
 
 require (
 	github.com/gofiber/fiber/v3 v3.0.0
+	github.com/google/pprof v0.0.0-20260903180319-d6c3cb2f37ec
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.8.0
 	go.opentelemetry.io/proto/otlp v1.11.0
