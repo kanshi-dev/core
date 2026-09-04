@@ -17,6 +17,7 @@ SELECT
     version AS "version",
     last_seen AS "lastSeen",
     disk_size AS "diskSize"
+    ,profile_targets::TEXT AS "profileTargets"
 FROM agents
 ORDER BY last_seen DESC;
 
@@ -32,9 +33,10 @@ INSERT INTO agents (
     total_memory,
     disk_size,
     version,
+    profile_targets,
     last_seen
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,@profile_targets,NOW())
 ON CONFLICT (agent_id)
     DO UPDATE SET
                   hostname = EXCLUDED.hostname,
@@ -45,5 +47,5 @@ ON CONFLICT (agent_id)
                   arch = EXCLUDED.arch,
                   cpu_cores = EXCLUDED.cpu_cores,
                   total_memory = EXCLUDED.total_memory,
-                  version = EXCLUDED.version;
-
+                  version = EXCLUDED.version,
+                  profile_targets = EXCLUDED.profile_targets;

@@ -23,21 +23,23 @@ SELECT
     version AS "version",
     last_seen AS "lastSeen",
     disk_size AS "diskSize"
+    ,profile_targets::TEXT AS "profileTargets"
 FROM agents
 ORDER BY last_seen DESC
 `
 
 type ListAgentsRow struct {
-	AgentId     string             `json:"agentId"`
-	HostName    string             `json:"hostName"`
-	Os          string             `json:"os"`
-	Platform    string             `json:"platform"`
-	Arch        string             `json:"arch"`
-	CpuCores    int32              `json:"cpuCores"`
-	TotalMemory int64              `json:"totalMemory"`
-	Version     string             `json:"version"`
-	LastSeen    pgtype.Timestamptz `json:"lastSeen"`
-	DiskSize    int64              `json:"diskSize"`
+	AgentId        string             `json:"agentId"`
+	HostName       string             `json:"hostName"`
+	Os             string             `json:"os"`
+	Platform       string             `json:"platform"`
+	Arch           string             `json:"arch"`
+	CpuCores       int32              `json:"cpuCores"`
+	TotalMemory    int64              `json:"totalMemory"`
+	Version        string             `json:"version"`
+	LastSeen       pgtype.Timestamptz `json:"lastSeen"`
+	DiskSize       int64              `json:"diskSize"`
+	ProfileTargets string             `json:"profileTargets"`
 }
 
 func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
@@ -60,6 +62,7 @@ func (q *Queries) ListAgents(ctx context.Context) ([]ListAgentsRow, error) {
 			&i.Version,
 			&i.LastSeen,
 			&i.DiskSize,
+			&i.ProfileTargets,
 		); err != nil {
 			return nil, err
 		}
@@ -93,9 +96,10 @@ INSERT INTO agents (
     total_memory,
     disk_size,
     version,
+    profile_targets,
     last_seen
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
 ON CONFLICT (agent_id)
     DO UPDATE SET
                   hostname = EXCLUDED.hostname,
@@ -106,19 +110,21 @@ ON CONFLICT (agent_id)
                   arch = EXCLUDED.arch,
                   cpu_cores = EXCLUDED.cpu_cores,
                   total_memory = EXCLUDED.total_memory,
-                  version = EXCLUDED.version
+                  version = EXCLUDED.version,
+                  profile_targets = EXCLUDED.profile_targets
 `
 
 type UpsertAgentReportParams struct {
-	AgentID     string `json:"agent_id"`
-	Hostname    string `json:"hostname"`
-	Os          string `json:"os"`
-	Platform    string `json:"platform"`
-	Arch        string `json:"arch"`
-	CpuCores    int32  `json:"cpu_cores"`
-	TotalMemory int64  `json:"total_memory"`
-	DiskSize    int64  `json:"disk_size"`
-	Version     string `json:"version"`
+	AgentID        string `json:"agent_id"`
+	Hostname       string `json:"hostname"`
+	Os             string `json:"os"`
+	Platform       string `json:"platform"`
+	Arch           string `json:"arch"`
+	CpuCores       int32  `json:"cpu_cores"`
+	TotalMemory    int64  `json:"total_memory"`
+	DiskSize       int64  `json:"disk_size"`
+	Version        string `json:"version"`
+	ProfileTargets []byte `json:"profile_targets"`
 }
 
 func (q *Queries) UpsertAgentReport(ctx context.Context, arg UpsertAgentReportParams) error {
@@ -132,6 +138,7 @@ func (q *Queries) UpsertAgentReport(ctx context.Context, arg UpsertAgentReportPa
 		arg.TotalMemory,
 		arg.DiskSize,
 		arg.Version,
+		arg.ProfileTargets,
 	)
 	return err
 }

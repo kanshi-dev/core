@@ -43,6 +43,24 @@ WHERE profile_captures.id = @id
   AND expires_at > NOW()
 RETURNING *;
 
+-- name: ClaimProfileCapture :one
+WITH expired AS (
+    DELETE FROM profile_captures WHERE expires_at <= NOW()
+), pending AS (
+    SELECT id
+    FROM profile_captures
+    WHERE profile_captures.agent_id = @agent_id
+      AND profile_captures.state IN ('queued', 'capturing')
+      AND profile_captures.expires_at > NOW()
+    ORDER BY profile_captures.created_at
+    LIMIT 1
+)
+UPDATE profile_captures
+SET state = 'capturing', updated_at = NOW()
+FROM pending
+WHERE profile_captures.id = pending.id
+RETURNING profile_captures.*;
+
 -- name: CompleteProfileCapture :one
 WITH expired AS (
     DELETE FROM profile_captures WHERE expires_at <= NOW()

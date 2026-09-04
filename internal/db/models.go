@@ -9,16 +9,17 @@ import (
 )
 
 type Agent struct {
-	AgentID     string             `json:"agent_id"`
-	Hostname    string             `json:"hostname"`
-	Os          string             `json:"os"`
-	Platform    string             `json:"platform"`
-	Arch        string             `json:"arch"`
-	CpuCores    int32              `json:"cpu_cores"`
-	TotalMemory int64              `json:"total_memory"`
-	DiskSize    int64              `json:"disk_size"`
-	Version     string             `json:"version"`
-	LastSeen    pgtype.Timestamptz `json:"last_seen"`
+	AgentID        string             `json:"agent_id"`
+	Hostname       string             `json:"hostname"`
+	Os             string             `json:"os"`
+	Platform       string             `json:"platform"`
+	Arch           string             `json:"arch"`
+	CpuCores       int32              `json:"cpu_cores"`
+	TotalMemory    int64              `json:"total_memory"`
+	DiskSize       int64              `json:"disk_size"`
+	Version        string             `json:"version"`
+	ProfileTargets []byte             `json:"profile_targets"`
+	LastSeen       pgtype.Timestamptz `json:"last_seen"`
 }
 
 type AlertEvent struct {

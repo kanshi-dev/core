@@ -22,8 +22,11 @@ CREATE TABLE IF NOT EXISTS agents (
     total_memory BIGINT NOT NULL,
     disk_size BIGINT NOT NULL,
     version TEXT NOT NULL,
+    profile_targets JSONB NOT NULL DEFAULT '[]'::jsonb,
     last_seen TIMESTAMPTZ NOT NULL
 );
+
+ALTER TABLE agents ADD COLUMN IF NOT EXISTS profile_targets JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 SELECT add_retention_policy('metrics', INTERVAL '30 days', if_not_exists => TRUE);
 

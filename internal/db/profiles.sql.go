@@ -11,6 +11,46 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const claimProfileCapture = `-- name: ClaimProfileCapture :one
+WITH expired AS (
+    DELETE FROM profile_captures WHERE expires_at <= NOW()
+), pending AS (
+    SELECT id
+    FROM profile_captures
+    WHERE profile_captures.agent_id = $1
+      AND profile_captures.state IN ('queued', 'capturing')
+      AND profile_captures.expires_at > NOW()
+    ORDER BY profile_captures.created_at
+    LIMIT 1
+)
+UPDATE profile_captures
+SET state = 'capturing', updated_at = NOW()
+FROM pending
+WHERE profile_captures.id = pending.id
+RETURNING profile_captures.id, profile_captures.agent_id, profile_captures.target_name, profile_captures.profile_type, profile_captures.duration_seconds, profile_captures.state, profile_captures.error, profile_captures.filename, profile_captures.content_type, profile_captures.artifact, profile_captures.created_at, profile_captures.updated_at, profile_captures.expires_at
+`
+
+func (q *Queries) ClaimProfileCapture(ctx context.Context, agentID string) (ProfileCapture, error) {
+	row := q.db.QueryRow(ctx, claimProfileCapture, agentID)
+	var i ProfileCapture
+	err := row.Scan(
+		&i.ID,
+		&i.AgentID,
+		&i.TargetName,
+		&i.ProfileType,
+		&i.DurationSeconds,
+		&i.State,
+		&i.Error,
+		&i.Filename,
+		&i.ContentType,
+		&i.Artifact,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
 const completeProfileCapture = `-- name: CompleteProfileCapture :one
 WITH expired AS (
     DELETE FROM profile_captures WHERE expires_at <= NOW()

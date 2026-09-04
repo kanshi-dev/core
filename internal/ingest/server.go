@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kanshi-dev/core/internal/db"
 	pb "github.com/kanshi-dev/core/proto"
@@ -39,25 +40,30 @@ func (s *Server) ReportAgent(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	err := s.queries.UpsertAgentReport(
+	profileTargets, err := json.Marshal(req.GetProfileTargets())
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to encode profile targets")
+	}
+	err = s.queries.UpsertAgentReport(
 		ctx,
 		db.UpsertAgentReportParams{
-			AgentID:     req.AgentId,
-			Hostname:    req.Hostname,
-			Os:          req.Os,
-			Platform:    req.Platform,
-			Arch:        req.Arch,
-			CpuCores:    req.CpuCores,
-			TotalMemory: req.TotalMemory,
-			DiskSize:    req.DiskSize,
-			Version:     req.Version,
+			AgentID:        req.AgentId,
+			Hostname:       req.Hostname,
+			Os:             req.Os,
+			Platform:       req.Platform,
+			Arch:           req.Arch,
+			CpuCores:       req.CpuCores,
+			TotalMemory:    req.TotalMemory,
+			DiskSize:       req.DiskSize,
+			Version:        req.Version,
+			ProfileTargets: profileTargets,
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.Ack{Accepted: 1}, nil
+	return s.ack(ctx, req.AgentId, 1), nil
 }
 
 func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error) {
@@ -71,7 +77,7 @@ func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error
 	count := len(req.Points)
 
 	if count == 0 {
-		return &pb.Ack{Accepted: 0}, nil
+		return s.ack(ctx, req.AgentId, 0), nil
 	}
 
 	agentIDs := make([]string, count)
@@ -113,5 +119,55 @@ func (s *Server) IngestBatch(ctx context.Context, req *pb.Batch) (*pb.Ack, error
 		log.Printf("warning: failed to upsert heartbeat for agent %s: %v", req.AgentId, err)
 	}
 
-	return &pb.Ack{Accepted: int64(count)}, nil
+	return s.ack(ctx, req.AgentId, int64(count)), nil
+}
+
+func (s *Server) UploadProfile(ctx context.Context, req *pb.ProfileUpload) (*pb.Ack, error) {
+	if s.queries == nil {
+		return nil, ErrNoDatabase
+	}
+	if err := validateProfileUpload(req); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	var err error
+	if req.GetError() != "" {
+		_, err = s.queries.FailProfileCapture(ctx, db.FailProfileCaptureParams{
+			Error: pgtype.Text{String: req.GetError(), Valid: true}, ID: req.GetCaptureId(), AgentID: req.GetAgentId(),
+		})
+	} else {
+		_, err = s.queries.CompleteProfileCapture(ctx, db.CompleteProfileCaptureParams{
+			Filename:    pgtype.Text{String: req.GetFilename(), Valid: true},
+			ContentType: pgtype.Text{String: req.GetContentType(), Valid: true},
+			Artifact:    req.GetArtifact(), ID: req.GetCaptureId(), AgentID: req.GetAgentId(),
+		})
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, status.Error(codes.NotFound, "active profile capture not found")
+	}
+	if err != nil {
+		log.Printf("failed to store profile capture: %v", err)
+		return nil, status.Error(codes.Internal, "failed to store profile capture")
+	}
+	return &pb.Ack{Accepted: 1}, nil
+}
+
+func (s *Server) ack(ctx context.Context, agentID string, accepted int64) *pb.Ack {
+	ack := &pb.Ack{Accepted: accepted}
+	capture, err := s.queries.ClaimProfileCapture(ctx, agentID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ack
+	}
+	if err != nil {
+		log.Printf("warning: failed to claim profile capture for agent %s: %v", agentID, err)
+		return ack
+	}
+	ack.ProfileCommand = &pb.ProfileCommand{
+		CaptureId:       capture.ID,
+		TargetName:      capture.TargetName,
+		ProfileType:     capture.ProfileType,
+		DurationSeconds: int32(capture.DurationSeconds),
+		ExpiresUnixNano: capture.ExpiresAt.Time.UnixNano(),
+	}
+	return ack
 }

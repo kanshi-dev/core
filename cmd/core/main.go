@@ -67,7 +67,7 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(ingest.APIKeyAuth(apiKey)),
-		grpc.MaxRecvMsgSize(4<<20),
+		grpc.MaxRecvMsgSize(12<<20),
 	)
 	pb.RegisterIngestServiceServer(grpcServer, ingest.NewServer(queries))
 	otlpServer := otlp.NewServer(queries, traceRetention, logRetention)
