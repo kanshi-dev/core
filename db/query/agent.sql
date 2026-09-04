@@ -49,3 +49,8 @@ ON CONFLICT (agent_id)
                   total_memory = EXCLUDED.total_memory,
                   version = EXCLUDED.version,
                   profile_targets = EXCLUDED.profile_targets;
+
+-- name: GetAgentProfileTargets :one
+SELECT profile_targets::TEXT
+FROM agents
+WHERE agent_id = @agent_id;

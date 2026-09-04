@@ -12,10 +12,15 @@ func Init(
 	agentService *service.AgentsService,
 	alertService *service.AlertsService,
 	telemetryService *service.TelemetryService,
+	profilesService *service.ProfilesService,
 ) {
 	router.Get("/metrics", handlers.GetMetrics(metricService))
 	router.Get("/metrics/aggregate", handlers.GetAggregatedMetrics(metricService))
 	router.Get("/agents", handlers.GetAgentHeartBeat(agentService))
+	router.Post("/agents/:agentId/profiles", handlers.CreateProfile(profilesService))
+	router.Get("/agents/:agentId/profiles", handlers.ListProfiles(profilesService))
+	router.Get("/profiles/:id", handlers.GetProfile(profilesService))
+	router.Get("/profiles/:id/download", handlers.DownloadProfile(profilesService))
 
 	router.Get("/alerts/rules", handlers.ListAlertRules(alertService))
 	router.Post("/alerts/rules", handlers.CreateAlertRule(alertService))

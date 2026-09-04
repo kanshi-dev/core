@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strings"
 	"time"
 
 	pb "github.com/kanshi-dev/core/proto"
@@ -68,6 +69,12 @@ func validateProfileUpload(req *pb.ProfileUpload) error {
 	}
 	if len(req.GetFilename()) > maxFieldBytes || len(req.GetContentType()) > maxFieldBytes {
 		return errors.New("profile metadata exceeds 255 bytes")
+	}
+	if strings.ContainsAny(req.GetFilename(), "/\\\r\n\"") {
+		return errors.New("profile filename contains invalid characters")
+	}
+	if strings.ContainsAny(req.GetContentType(), "\r\n") {
+		return errors.New("profile content_type contains invalid characters")
 	}
 	if len(req.GetError()) > 4096 {
 		return errors.New("profile error exceeds 4096 bytes")

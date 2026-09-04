@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getAgentProfileTargets = `-- name: GetAgentProfileTargets :one
+SELECT profile_targets::TEXT
+FROM agents
+WHERE agent_id = $1
+`
+
+func (q *Queries) GetAgentProfileTargets(ctx context.Context, agentID string) (string, error) {
+	row := q.db.QueryRow(ctx, getAgentProfileTargets, agentID)
+	var profile_targets string
+	err := row.Scan(&profile_targets)
+	return profile_targets, err
+}
+
 const listAgents = `-- name: ListAgents :many
 SELECT
     agent_id AS "agentId",
