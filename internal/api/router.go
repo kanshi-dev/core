@@ -44,14 +44,17 @@ func InitRouter(app *fiber.App, apiSever *Server, dashboardKey string) {
 		if c.Method() == fiber.MethodOptions {
 			return c.Next()
 		}
-		if !authorized(c.Get(fiber.HeaderAuthorization), dashboardKey) {
+		traceSession := c.Cookies("kanshi_trace_session")
+		traceID := c.Params("id")
+		viewerAuthorized := apiSever.TraceViewer != nil && traceSession != "" && apiSever.TraceViewer.AuthorizedSession(traceSession, traceID)
+		if !authorized(c.Get(fiber.HeaderAuthorization), dashboardKey) && !viewerAuthorized {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"code": fiber.StatusUnauthorized, "message": "unauthorized", "data": nil})
 		}
 		return c.Next()
 	})
 
 	// Calls Init() from v1/router.go
-	v1.Init(v1Group, apiSever.MetricsService, apiSever.AgentService, apiSever.AlertService, apiSever.TelemetryService, apiSever.ProfilesService)
+	v1.Init(v1Group, apiSever.MetricsService, apiSever.AgentService, apiSever.AlertService, apiSever.TelemetryService, apiSever.ProfilesService, apiSever.TraceViewer)
 
 	//404 Endpoint
 	app.Use(func(c fiber.Ctx) error {

@@ -6,9 +6,29 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/adaptor"
 	"github.com/kanshi-dev/core/internal/api/v1/response"
 	"github.com/kanshi-dev/core/internal/service"
 )
+
+func TraceViewer(svc *service.TraceViewerService) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		id := c.Params("id")
+		prefix := "/api/v1/profiles/" + id + "/trace"
+		return adaptor.HTTPHandlerWithContext(svc.Handler(id, prefix))(c)
+	}
+}
+
+func CreateTraceViewerSession(svc *service.TraceViewerService) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		token, err := svc.CreateSession(c.Context(), c.Params("id"))
+		if err != nil {
+			return profileError(c, err)
+		}
+		c.Cookie(&fiber.Cookie{Name: "kanshi_trace_session", Value: token, HTTPOnly: true, SameSite: "Lax", Path: "/api/v1/profiles/" + c.Params("id") + "/trace", MaxAge: 300})
+		return response.CustomResponse(c, fiber.StatusOK, "success", fiber.Map{"url": "/api/v1/profiles/" + c.Params("id") + "/trace"})
+	}
+}
 
 func CreateProfile(svc *service.ProfilesService) fiber.Handler {
 	return func(c fiber.Ctx) error {
