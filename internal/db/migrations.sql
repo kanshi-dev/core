@@ -90,3 +90,29 @@ CREATE TABLE IF NOT EXISTS otel_logs (
 SELECT create_hypertable('otel_logs', 'ts', if_not_exists => TRUE);
 CREATE INDEX IF NOT EXISTS idx_otel_logs_service_time ON otel_logs (service_name, ts DESC);
 CREATE INDEX IF NOT EXISTS idx_otel_logs_trace_span ON otel_logs (trace_id, span_id, ts);
+
+CREATE TABLE IF NOT EXISTS profile_captures (
+    id TEXT PRIMARY KEY,
+    agent_id TEXT NOT NULL,
+    target_name TEXT NOT NULL,
+    profile_type TEXT NOT NULL,
+    duration_seconds SMALLINT NOT NULL DEFAULT 0,
+    state TEXT NOT NULL DEFAULT 'queued',
+    error TEXT,
+    filename TEXT,
+    content_type TEXT,
+    artifact BYTEA,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '5 minutes',
+    CHECK (state IN ('queued', 'capturing', 'completed', 'failed')),
+    CHECK (artifact IS NULL OR OCTET_LENGTH(artifact) <= 10485760)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_captures_active_agent
+    ON profile_captures (agent_id)
+    WHERE state IN ('queued', 'capturing');
+CREATE INDEX IF NOT EXISTS idx_profile_captures_agent_created
+    ON profile_captures (agent_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_profile_captures_expires
+    ON profile_captures (expires_at);

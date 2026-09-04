@@ -78,3 +78,19 @@ type OtelSpan struct {
 	ResourceAgentID  pgtype.Text        `json:"resource_agent_id"`
 	ResourceHostName pgtype.Text        `json:"resource_host_name"`
 }
+
+type ProfileCapture struct {
+	ID              string             `json:"id"`
+	AgentID         string             `json:"agent_id"`
+	TargetName      string             `json:"target_name"`
+	ProfileType     string             `json:"profile_type"`
+	DurationSeconds int16              `json:"duration_seconds"`
+	State           string             `json:"state"`
+	Error           pgtype.Text        `json:"error"`
+	Filename        pgtype.Text        `json:"filename"`
+	ContentType     pgtype.Text        `json:"content_type"`
+	Artifact        []byte             `json:"artifact"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ExpiresAt       pgtype.Timestamptz `json:"expires_at"`
+}
